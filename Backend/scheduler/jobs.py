@@ -1,1 +1,3 @@
-# placeholder — implementation not started
+from apscheduler.schedulers.background import BackgroundScheduler
+
+scheduler = BackgroundScheduler()

@@ -1,1 +1,1 @@
-# placeholder — implementation not started
+# Phase 1 empty stub
