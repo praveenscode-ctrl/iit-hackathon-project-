@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+*.env
+!.env.example
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Flutter / Dart
+Frontend/.dart_tool/
+Frontend/.flutter-plugins
+Frontend/.flutter-plugins-dependencies
+Frontend/.packages
+Frontend/pubspec.lock
+Frontend/build/
+Frontend/.idea/
+Frontend/android/.gradle/
+Frontend/android/local.properties
+Frontend/android/app/debug/
+Frontend/android/app/profile/
+Frontend/android/app/release/
+Frontend/ios/Pods/
+Frontend/ios/.symlinks/
+Frontend/ios/Flutter/Flutter.framework
+Frontend/ios/Flutter/Flutter.podspec
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
