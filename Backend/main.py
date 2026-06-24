@@ -19,6 +19,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+from routers.auth import router as auth_router
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+
 @app.get("/health")
 def health():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat() + "Z"}
