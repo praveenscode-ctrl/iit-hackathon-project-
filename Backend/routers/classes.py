@@ -47,9 +47,12 @@ def get_classes(db: Session = Depends(get_db), u: User = Depends(require_role(["
         res.append({
             "id": str(c.id),
             "class_name": c.class_name,
+            "description": c.description,
+            "academic_year": c.academic_year,
             "status": c.status,
             "student_count": sc,
-            "mentor_count": mc
+            "mentor_count": mc,
+            "created_at": c.created_at.isoformat() if c.created_at else None
         })
     return {"classes": res}
 

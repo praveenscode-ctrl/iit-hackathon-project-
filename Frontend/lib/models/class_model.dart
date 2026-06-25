@@ -20,14 +20,14 @@ class ClassModel {
   });
 
   factory ClassModel.fromJson(Map<String, dynamic> j) => ClassModel(
-        id: j['id'] as String,
-        className: j['class_name'] as String,
+        id: j['id'] as String? ?? '',
+        className: j['class_name'] as String? ?? '',
         description: j['description'] as String?,
         academicYear: j['academic_year'] as String?,
-        status: j['status'] as String,
-        studentCount: (j['student_count'] as num).toInt(),
+        status: j['status'] as String? ?? 'ACTIVE',
+        studentCount: (j['student_count'] as num?)?.toInt() ?? 0,
         mentorCount: (j['mentor_count'] as num?)?.toInt() ?? 0,
-        createdAt: j['created_at'] as String,
+        createdAt: j['created_at'] as String? ?? '',
       );
 }
 
