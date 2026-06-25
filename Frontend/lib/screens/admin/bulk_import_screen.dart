@@ -81,7 +81,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       try {
         final data = await apiGet('/provision/bulk-import/$batchId');
         final status = data['status'] as String?;
-        if (status == 'DONE' || status == 'FAILED') {
+        if (status == 'COMPLETED' || status == 'PARTIAL' || status == 'FAILED') {
           if (mounted) setState(() => _batchResult = data as Map<String, dynamic>);
           break;
         }
@@ -153,15 +153,16 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     final status = data['status'] as String? ?? '';
     final errors = data['errors'] as List? ?? [];
     final summary = data['summary'] as Map? ?? {};
+    final isSuccess = status == 'COMPLETED' || status == 'PARTIAL';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(status == 'DONE' ? Icons.check_circle : Icons.error, color: status == 'DONE' ? Colors.green : Colors.red),
+            Icon(isSuccess ? Icons.check_circle : Icons.error, color: isSuccess ? Colors.green : Colors.red),
             const SizedBox(width: 8),
-            Text('Import $status', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: status == 'DONE' ? Colors.green : Colors.red)),
+            Text('Import $status', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isSuccess ? Colors.green : Colors.red)),
           ],
         ),
         if (summary.isNotEmpty) ...[
