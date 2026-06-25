@@ -30,25 +30,19 @@ import '../screens/mentor/approvals_screen.dart';
 import '../screens/mentor/assignment_list_screen.dart';
 import '../screens/mentor/create_assignment_screen.dart';
 import '../screens/mentor/assignment_tracker_screen.dart';
-import '../screens/mentor/submission_detail_screen.dart';
-import '../screens/mentor/analytics_screen.dart';
-import '../screens/mentor/risk_list_screen.dart';
-import '../screens/mentor/export_screen.dart';
-import '../screens/mentor/ai_query_screen.dart';
+import '../screens/mentor/submissions_view_screen.dart';
+import '../screens/mentor/class_analytics_screen.dart';
+import '../screens/mentor/assignment_analytics_screen.dart';
 
 // student screens
 import '../screens/student/student_dashboard_screen.dart';
-import '../screens/student/assignment_list_screen.dart';
-import '../screens/student/assignment_detail_screen.dart';
-import '../screens/student/submit_assignment_screen.dart';
-import '../screens/student/submission_history_screen.dart';
-import '../screens/student/my_analytics_screen.dart';
-import '../screens/student/notifications_screen.dart';
+import '../screens/student/student_assignment_detail_screen.dart';
+import '../screens/student/student_submissions_screen.dart';
+import '../screens/student/student_analytics_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
   redirect: (context, state) async {
-    // splash handles its own auth check — no redirect needed there
     return null;
   },
   routes: [
@@ -122,45 +116,30 @@ final router = GoRouter(
       builder: (_, state) => AssignmentTrackerScreen(assignmentId: state.pathParameters['assignmentId']!),
     ),
     GoRoute(
-      path: '/mentor/assignments/:assignmentId/submissions/:studentId',
-      builder: (_, state) => SubmissionDetailScreen(
+      path: '/mentor/assignments/:assignmentId/submissions',
+      builder: (_, state) => SubmissionsViewScreen(
         assignmentId: state.pathParameters['assignmentId']!,
-        studentId: state.pathParameters['studentId']!,
       ),
     ),
     GoRoute(
       path: '/mentor/classes/:classId/analytics',
-      builder: (_, state) => MentorAnalyticsScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) => MentorClassAnalyticsScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
-      path: '/mentor/classes/:classId/risk',
-      builder: (_, state) => RiskListScreen(classId: state.pathParameters['classId']!),
+      path: '/mentor/assignments/:assignmentId/analytics',
+      builder: (_, state) => MentorAssignmentAnalyticsScreen(assignmentId: state.pathParameters['assignmentId']!),
     ),
-    GoRoute(
-      path: '/mentor/assignments/:assignmentId/export',
-      builder: (_, state) => ExportScreen(assignmentId: state.pathParameters['assignmentId']!),
-    ),
-    GoRoute(path: '/mentor/ai', builder: (_, __) => const MentorAiQueryScreen()),
 
     // ── student ──
     GoRoute(path: '/student/dashboard', builder: (_, __) => const StudentDashboardScreen()),
     GoRoute(
-      path: '/student/assignments',
-      builder: (_, state) => StudentAssignmentListScreen(classId: state.extra as String),
-    ),
-    GoRoute(
       path: '/student/assignments/:assignmentId',
-      builder: (_, state) => AssignmentDetailScreen(assignmentId: state.pathParameters['assignmentId']!),
+      builder: (_, state) => StudentAssignmentDetailScreen(assignmentId: state.pathParameters['assignmentId']!),
     ),
-    GoRoute(
-      path: '/student/assignments/:assignmentId/submit',
-      builder: (_, state) => SubmitAssignmentScreen(assignmentId: state.pathParameters['assignmentId']!),
-    ),
-    GoRoute(path: '/student/submissions', builder: (_, __) => const SubmissionHistoryScreen()),
+    GoRoute(path: '/student/submissions', builder: (_, __) => const StudentSubmissionsScreen()),
     GoRoute(
       path: '/student/analytics',
-      builder: (_, state) => MyAnalyticsScreen(studentId: state.extra as String),
+      builder: (_, state) => const StudentAnalyticsScreen(),
     ),
-    GoRoute(path: '/student/notifications', builder: (_, __) => const NotificationsScreen()),
   ],
 );
