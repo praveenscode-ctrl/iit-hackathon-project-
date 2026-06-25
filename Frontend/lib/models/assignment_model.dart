@@ -70,7 +70,9 @@ class AssignmentModel {
         status: j['status'] as String,
         classId: j['class_id'] as String,
         createdByName: j['created_by_name'] as String,
-        createdAt: DateTime.parse(j['created_at'] as String),
+        createdAt: j['created_at'] != null
+            ? DateTime.parse(j['created_at'] as String)
+            : DateTime.now(),
         studentSubmission: j['student_submission'] != null
             ? StudentSubmissionInfo.fromJson(
                 j['student_submission'] as Map<String, dynamic>)

@@ -27,3 +27,21 @@ class SubmissionModel {
         version: (j['version'] as num).toInt(),
       );
 }
+
+class ExportJobModel {
+  final String exportJobId;
+  final String status;
+  final String? fileUrl;
+
+  ExportJobModel({
+    required this.exportJobId,
+    required this.status,
+    this.fileUrl,
+  });
+
+  factory ExportJobModel.fromJson(Map<String, dynamic> j) => ExportJobModel(
+        exportJobId: j['export_job_id'] as String,
+        status: j['status'] as String,
+        fileUrl: j['file_url'] as String?,
+      );
+}

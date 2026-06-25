@@ -41,7 +41,10 @@ class ClassAnalytics(Base):
     avg_miss_rate = Column(Numeric(5, 2), server_default='0', nullable=False)
     avg_late_rate = Column(Numeric(5, 2), server_default='0', nullable=False)
     high_risk_count = Column(Integer, server_default='0', nullable=False)
+    medium_risk_count = Column(Integer, server_default='0', nullable=False)
+    low_risk_count = Column(Integer, server_default='0', nullable=False)
     last_computed_at = Column(DateTime(timezone=True), nullable=True)
+
 
 class AssignmentAnalytics(Base):
     __tablename__ = 'assignment_analytics'
@@ -55,3 +58,4 @@ class AssignmentAnalytics(Base):
     completion_rate = Column(Numeric(5, 2), server_default='0', nullable=False)
     is_bottleneck = Column(Boolean, server_default='false', nullable=False)
     last_computed_at = Column(DateTime(timezone=True), nullable=True)
+

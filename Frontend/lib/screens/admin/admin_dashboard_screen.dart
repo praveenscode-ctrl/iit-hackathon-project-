@@ -211,12 +211,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-              Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), overflow: TextOverflow.ellipsis)),
+              ],
+            ),
           ),
         ],
       ),
