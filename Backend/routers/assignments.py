@@ -125,6 +125,7 @@ def publish_assignment(assignment_id: str, db: Session = Depends(get_db), u: Use
     for s in students:
         db.add(Notification(user_id=s.id, notification_type='ASSIGNMENT_PUBLISHED', title='New Assignment', body=a.title, payload={"assignment_id": str(a.id)}))
         if s.fcm_token: tokens.append(s.fcm_token)
+        analytics_service.recompute_student_analytics(str(s.id), str(a.class_id), db)
     
     db.commit()
     

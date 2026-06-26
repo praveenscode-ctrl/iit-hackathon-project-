@@ -194,7 +194,12 @@ def approve_student(class_id: str, student_id: str, db: Session = Depends(get_db
     
     sa = db.query(StudentAnalytics).filter(StudentAnalytics.student_id == student_id, StudentAnalytics.class_id == class_id).first()
     if not sa:
-        db.add(StudentAnalytics(student_id=student_id, class_id=class_id))
+        sa = StudentAnalytics(student_id=student_id, class_id=class_id)
+        db.add(sa)
+        db.flush()
+        
+    from services.analytics_service import recompute_student_analytics
+    recompute_student_analytics(student_id, class_id, db)
         
     db.add(Notification(user_id=student_id, notification_type='STUDENT_APPROVED', title='Access Granted', body=f'You can now log in to {c.class_name}'))
     
