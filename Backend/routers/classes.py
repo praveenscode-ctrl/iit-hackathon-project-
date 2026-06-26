@@ -121,6 +121,8 @@ def patch_class(class_id: str, req: PatchClassRequest, db: Session = Depends(get
         c.class_name = req.class_name
     if req.description is not None:
         c.description = req.description
+    if req.academic_year is not None:
+        c.academic_year = req.academic_year
     if req.status is not None:
         c.status = req.status
         if req.status == "ARCHIVED":

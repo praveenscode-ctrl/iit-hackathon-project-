@@ -18,7 +18,7 @@ import asyncio
 router = APIRouter()
 
 @router.post("/assignments/{assignment_id}/submit", status_code=201)
-def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depends(get_db), u: User = Depends(require_role(["STUDENT"]))):
+async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depends(get_db), u: User = Depends(require_role(["STUDENT"]))):
     a = db.query(Assignment).filter_by(id=assignment_id).first()
     if not a: raise HTTPException(404, "Not found")
     if a.status != 'PUBLISHED': raise HTTPException(400, "Assignment is not open for submission")
@@ -81,7 +81,6 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
     db.commit()
     
     try:
-        loop = asyncio.get_event_loop()
         ws_msg = {
             "event": "submission_created",
             "assignment_id": str(a.id),
@@ -97,12 +96,9 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
                 "is_late": is_late
             }
         }
-        if loop.is_running():
-            loop.create_task(manager.broadcast(str(a.id), ws_msg))
-        else:
-            asyncio.run(manager.broadcast(str(a.id), ws_msg))
-    except Exception:
-        pass
+        await manager.broadcast(str(a.id), ws_msg)
+    except Exception as e:
+        print("Submission WebSocket broadcast failed:", e)
         
     return {
         "submission_id": str(s.id),

@@ -18,12 +18,20 @@ def get_student_analytics(student_id: str, db: Session = Depends(get_db), u: Use
         
     sa = db.query(StudentAnalytics).filter_by(student_id=student_id).first()
     if not sa:
-        raise HTTPException(404, "Student analytics not found")
+        membership = db.query(ClassMembership).filter_by(user_id=student_id, member_role='STUDENT').first()
+        if not membership:
+            raise HTTPException(404, "Student analytics / membership not found")
+        sa = StudentAnalytics(student_id=student_id, class_id=membership.class_id)
+        db.add(sa)
+        db.flush()
         
     if u.role == "MENTOR":
         verify_mentor_class_access(str(sa.class_id), u, db)
     elif u.role == "ADMIN":
         verify_admin_class_access(str(sa.class_id), u, db)
+
+    from services.analytics_service import recompute_student_analytics
+    recompute_student_analytics(student_id, str(sa.class_id), db)
         
     query = text("""
         SELECT sa.*, c.class_name, u.full_name,
@@ -46,7 +54,7 @@ def get_student_analytics(student_id: str, db: Session = Depends(get_db), u: Use
           s.submitted_at, s.is_late
         FROM assignments a
         LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = :student_id AND s.is_current = true
-        WHERE a.class_id = :class_id
+        WHERE a.class_id = :class_id AND a.status IN ('PUBLISHED', 'CLOSED')
         ORDER BY a.created_at DESC
     """)
     hist_rows = db.execute(hist_query, {"student_id": student_id, "class_id": str(sa.class_id)}).fetchall()

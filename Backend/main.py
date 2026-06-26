@@ -6,8 +6,12 @@ from datetime import datetime
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure all tables are created in the database
+    from database import Base, engine
+    from models import user, submission, notification, export, class_, bulk_import, assignment, analytics
+    Base.metadata.create_all(bind=engine)
+
     # Ensure check_sa_risk check constraint is updated for CRITICAL risk level in PostgreSQL
-    from database import engine
     from sqlalchemy import text
     try:
         with engine.connect() as conn:

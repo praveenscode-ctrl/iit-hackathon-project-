@@ -12,12 +12,14 @@ from models.class_ import ClassMembership
 from services.s3_service import s3
 from datetime import datetime
 
-def generate_export(export_job_id: str, db: Session):
-    job = db.query(ExportJob).filter_by(id=export_job_id).first()
-    if not job:
-        return
-
+def generate_export(export_job_id: str):
+    from database import SessionLocal
+    db = SessionLocal()
     try:
+        job = db.query(ExportJob).filter_by(id=export_job_id).first()
+        if not job:
+            return
+
         assignment = db.query(Assignment).filter_by(id=job.assignment_id).first()
 
         # fetch all active students + their current submissions
@@ -120,6 +122,14 @@ def generate_export(export_job_id: str, db: Session):
         db.commit()
 
     except Exception as e:
-        job.status = "FAILED"
-        db.commit()
+        db.rollback()
+        try:
+            job = db.query(ExportJob).filter_by(id=export_job_id).first()
+            if job:
+                job.status = "FAILED"
+                db.commit()
+        except Exception:
+            pass
         raise
+    finally:
+        db.close()

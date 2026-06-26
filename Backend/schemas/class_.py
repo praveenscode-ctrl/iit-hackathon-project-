@@ -8,6 +8,7 @@ class CreateClassRequest(BaseModel):
 class PatchClassRequest(BaseModel):
     class_name: str | None = None
     description: str | None = None
+    academic_year: str | None = None
     status: str | None = None
 
 class RejectStudentRequest(BaseModel):

@@ -29,9 +29,16 @@ def get_presigned_download(file_url: str) -> dict:
     s3_key = file_url.split(".amazonaws.com/")[-1]
     if not s3_key or s3_key == file_url:
         raise ValueError("Invalid S3 URL")
+    
+    filename = s3_key.split("/")[-1]
     download_url = s3.generate_presigned_url(
         'get_object',
-        Params={'Bucket': bucket, 'Key': s3_key},
+        Params={
+            'Bucket': bucket,
+            'Key': s3_key,
+            'ResponseContentType': 'application/octet-stream',
+            'ResponseContentDisposition': f'attachment; filename="{filename}"'
+        },
         ExpiresIn=300
     )
     return {"download_url": download_url, "expires_in": 300}

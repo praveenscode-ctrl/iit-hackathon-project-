@@ -37,7 +37,7 @@ def create_export(req: ExportRequest, background: BackgroundTasks, db: Session =
     db.commit()
     db.refresh(job)
     
-    background.add_task(generate_export, str(job.id), db)
+    background.add_task(generate_export, str(job.id))
     
     return {"export_job_id": str(job.id), "status": "PENDING"}
 

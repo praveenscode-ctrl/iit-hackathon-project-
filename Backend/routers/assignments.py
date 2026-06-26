@@ -72,6 +72,23 @@ def get_assignments(class_id: str, db: Session = Depends(get_db), u: User = Depe
         d["class_id"] = str(d["class_id"])
         d["created_by"] = str(d["created_by"])
         d["created_by_name"] = creator
+        
+        if u.role == "STUDENT":
+            from models.submission import Submission
+            s = db.query(Submission).filter_by(assignment_id=a.id, student_id=u.id, is_current=True).first()
+            if s:
+                d["student_submission"] = {
+                    "submitted": True,
+                    "submission_id": str(s.id),
+                    "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
+                    "is_late": s.is_late,
+                    "version": s.version
+                }
+            else:
+                d["student_submission"] = None
+        else:
+            d["student_submission"] = None
+
         res.append(d)
 
     return {"assignments": res}

@@ -8,11 +8,14 @@ _initialized = False
 def _init_fcm():
     global _initialized
     if not _initialized:
-        cred_json = os.getenv("FCM_CREDENTIALS_JSON")
-        if cred_json:
-            cred = credentials.Certificate(json.loads(cred_json))
-            firebase_admin.initialize_app(cred)
-            _initialized = True
+        try:
+            cred_json = os.getenv("FCM_CREDENTIALS_JSON")
+            if cred_json:
+                cred = credentials.Certificate(json.loads(cred_json))
+                firebase_admin.initialize_app(cred)
+                _initialized = True
+        except Exception:
+            pass
 
 def send_single_fcm(token: str, title: str, body: str, data: dict = {}):
     if not token:

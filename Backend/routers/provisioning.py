@@ -128,17 +128,34 @@ def get_bulk_status(batch_id: str, db: Session = Depends(get_db), u: User = Depe
     b = db.query(BulkImportBatch).filter(BulkImportBatch.id == batch_id, BulkImportBatch.admin_id == u.id).first()
     if not b: raise HTTPException(status_code=404)
     errs = db.query(BulkImportError).filter(BulkImportError.batch_id == batch_id).all()
+    
+    file_name = b.file_name or ""
+    classes_created = b.success_rows
+    mentors_created = b.success_rows
+    students_created = b.success_rows
+    
+    if "|" in file_name:
+        parts = file_name.split("|")
+        file_name = parts[0]
+        if len(parts) >= 4:
+            try:
+                classes_created = int(parts[1])
+                mentors_created = int(parts[2])
+                students_created = int(parts[3])
+            except ValueError:
+                pass
+
     res = {
         "id": str(b.id),
-        "file_name": b.file_name,
+        "file_name": file_name,
         "status": b.status,
         "total_rows": b.total_rows,
         "success_rows": b.success_rows,
         "failed_rows": b.failed_rows,
         "summary": {
-            "classes_created": b.success_rows,
-            "mentors_created": b.success_rows,
-            "students_created": b.success_rows,
+            "classes_created": classes_created,
+            "mentors_created": mentors_created,
+            "students_created": students_created,
         },
         "errors": [{"sheet": e.sheet_name, "row": e.row_number, "field": e.field_name, "error": e.error_message, "message": e.error_message} for e in errs]
     }

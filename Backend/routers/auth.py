@@ -108,9 +108,14 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     m = None
     c_name = None
     if u.role == "STUDENT":
-        m = db.query(ClassMembership).filter(ClassMembership.user_id == u.id, ClassMembership.status == "ACTIVE").first()
-        if not m:
+        m = db.query(ClassMembership).filter(ClassMembership.user_id == u.id).first()
+        if not m or m.status == "PENDING":
             raise HTTPException(status_code=403, detail="Account pending approval. Please wait for your mentor to approve your access.")
+        elif m.status == "REJECTED":
+            reason_str = f" Reason: {m.rejection_reason}" if m.rejection_reason else ""
+            raise HTTPException(status_code=403, detail=f"Your registration was rejected.{reason_str}")
+        elif m.status != "ACTIVE":
+            raise HTTPException(status_code=403, detail="Your account is not active.")
     elif u.role == "MENTOR":
         m = db.query(ClassMembership).filter(ClassMembership.user_id == u.id, ClassMembership.status == "ACTIVE").first()
         if not m:

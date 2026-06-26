@@ -32,6 +32,9 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
     tot = 0
     succ = 0
     fail = 0
+    classes_succ = 0
+    mentors_succ = 0
+    students_succ = 0
     emails_to_send = []
     
     if "Classes" in wb.sheetnames:
@@ -43,6 +46,7 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
                 ext = db.query(Class).filter(Class.class_name == cname, Class.admin_id == admin_id).first()
                 if ext:
                     class_map[cname] = str(ext.id)
+                    classes_succ += 1
                     succ += 1
                     continue
                 c = Class(admin_id=admin_id, class_name=cname, description=row[1] if len(row)>1 else None, academic_year=str(row[2]) if len(row)>2 and row[2] else None, status='ACTIVE')
@@ -50,6 +54,7 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
                 db.flush()
                 db.add(ClassAnalytics(class_id=c.id))
                 class_map[cname] = str(c.id)
+                classes_succ += 1
                 succ += 1
             except Exception as e:
                 fail += 1
@@ -69,6 +74,7 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
                 db.flush()
                 db.add(ClassMembership(class_id=class_map[cname], user_id=u.id, member_role='MENTOR', is_primary_mentor=bool(is_prim), status='ACTIVE', joined_via='BULK_IMPORT'))
                 emails_to_send.append((email, name, str(pwd), reg, cname))
+                mentors_succ += 1
                 succ += 1
             except Exception as e:
                 fail += 1
@@ -88,6 +94,7 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
                 db.flush()
                 db.add(ClassMembership(class_id=class_map[cname], user_id=u.id, member_role='STUDENT', status='PENDING', joined_via='BULK_IMPORT'))
                 emails_to_send.append((email, name, str(pwd), str(reg), cname))
+                students_succ += 1
                 succ += 1
             except Exception as e:
                 fail += 1
@@ -96,6 +103,7 @@ def process_bulk_import(batch_id: str, file_path: str, admin_id: str):
     b.total_rows = tot
     b.success_rows = succ
     b.failed_rows = fail
+    b.file_name = f"{b.file_name or 'import.xlsx'}|{classes_succ}|{mentors_succ}|{students_succ}"
     b.status = 'COMPLETED' if fail == 0 else 'PARTIAL'
     db.commit()
     
