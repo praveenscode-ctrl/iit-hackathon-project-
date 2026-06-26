@@ -60,26 +60,14 @@ Traditional classroom management is fragmented across disconnected tools for ass
   </tr>
 </table>
 
-🎥 **Demo video:** [Add link here]
+
 
 ---
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────┐         ┌──────────────────┐         ┌──────────────┐
-│  Flutter App     │◄──────►│   FastAPI Backend │◄──────►│  PostgreSQL  │
-│  (Android)        │  REST/  │   (Python 3.11)   │   ORM   │              │
-│                   │  WS     │                   │         └──────────────┘
-└─────────────────┘         └──────────────────┘
-        ▲                            │
-        │ FCM Push                   │ boto3
-        ▼                            ▼
-┌─────────────────┐         ┌──────────────────┐
-│ Firebase Cloud   │         │     AWS S3        │
-│ Messaging         │         │ (submission files)│
-└─────────────────┘         └──────────────────┘
-```
+<img width="1536" height="1024" alt="ChatGPT Image Jun 26, 2026, 03_59_37 PM" src="https://github.com/user-attachments/assets/335d833c-5e51-45a3-8315-711f01674717" />
+
 
 **Roles & Flow:**
 1. **Admin** bulk-uploads rosters (Excel) → backend auto-creates accounts and emails OTP invites
@@ -212,7 +200,7 @@ Create a `.env` file in `Backend/` based on `.env.example`:
 |---|---|
 | Monish R | [@MONISHRCSE](https://github.com/MONISHRCSE) |
 | Praveen S | [@praveenscode-ctrl](https://github.com/praveenscode-ctrl) |
-| Jaisimha | [Add GitHub link] |
+| Jaisimha | [[@Jaisimha](https://github.com/praveenscode-ctrl)] |
 
 
 
