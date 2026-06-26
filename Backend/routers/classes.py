@@ -198,8 +198,10 @@ def approve_student(class_id: str, student_id: str, db: Session = Depends(get_db
         db.add(sa)
         db.flush()
         
-    from services.analytics_service import recompute_student_analytics
+    from services.analytics_service import recompute_student_analytics, recompute_class_analytics, recompute_class_assignments_analytics
     recompute_student_analytics(student_id, class_id, db)
+    recompute_class_analytics(class_id, db)
+    recompute_class_assignments_analytics(class_id, db)
         
     db.add(Notification(user_id=student_id, notification_type='STUDENT_APPROVED', title='Access Granted', body=f'You can now log in to {c.class_name}'))
     
@@ -229,6 +231,10 @@ def reject_student(class_id: str, student_id: str, req: RejectStudentRequest, db
     usr = db.query(User).filter(User.id == student_id).first()
     if usr.fcm_token:
         send_single_fcm(usr.fcm_token, "Access Denied", req.reason)
+        
+    from services.analytics_service import recompute_class_analytics, recompute_class_assignments_analytics
+    recompute_class_analytics(class_id, db)
+    recompute_class_assignments_analytics(class_id, db)
         
     db.commit()
     return {"message": "Student rejected"}

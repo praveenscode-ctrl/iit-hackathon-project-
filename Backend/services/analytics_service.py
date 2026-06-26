@@ -224,3 +224,36 @@ def recompute_all_after_close(assignment_id: str, db: Session):
         
     recompute_class_analytics(str(a.class_id), db)
     db.commit()
+
+def recompute_class_assignments_analytics(class_id: str, db: Session):
+    assignments = db.query(Assignment).filter(
+        Assignment.class_id == class_id,
+        Assignment.status.in_(['PUBLISHED', 'CLOSED'])
+    ).all()
+    
+    for a in assignments:
+        aa = db.query(AssignmentAnalytics).filter_by(assignment_id=a.id).first()
+        if not aa:
+            aa = AssignmentAnalytics(assignment_id=a.id)
+            db.add(aa)
+            
+        total_targets = db.query(ClassMembership).filter_by(class_id=class_id, member_role='STUDENT', status='ACTIVE').count()
+        sub_count = db.query(Submission).filter_by(assignment_id=a.id, is_current=True).count()
+        late_count = db.query(Submission).filter_by(assignment_id=a.id, is_current=True, is_late=True).count()
+        
+        aa.total_targets = total_targets
+        aa.submitted_count = sub_count
+        aa.late_count = late_count
+        if a.status == 'CLOSED':
+            aa.missed_count = max(0, total_targets - sub_count)
+        else:
+            aa.missed_count = 0
+            
+        if total_targets > 0:
+            aa.completion_rate = round((sub_count / total_targets) * 100, 2)
+        else:
+            aa.completion_rate = 0.0
+            
+        aa.is_bottleneck = (aa.completion_rate < 40.0)
+        aa.last_computed_at = datetime.now(timezone.utc)
+    db.commit()

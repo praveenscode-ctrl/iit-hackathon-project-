@@ -6,7 +6,11 @@ from models.class_ import ClassMembership, Class
 from utils.security import decode_token
 from uuid import UUID
 
-def get_current_user(authorization: str = Header(...), db: Session = Depends(get_db)) -> User:
+from typing import Optional
+
+def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> User:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
     token = authorization[7:]

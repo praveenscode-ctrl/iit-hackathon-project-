@@ -69,7 +69,7 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
         aa.late_count = late_count
         if aa.total_targets > 0:
             aa.completion_rate = round(sub_count / aa.total_targets * 100, 2)
-            aa.is_bottleneck = aa.completion_rate < 50
+            aa.is_bottleneck = aa.completion_rate < 40.0
             
     db.add(Notification(
         user_id=u.id,
