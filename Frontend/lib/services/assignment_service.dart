@@ -6,7 +6,9 @@ class AssignmentService {
   Future<List<AssignmentModel>> getAssignments(String classId) async {
     final data = await apiGet('/assignments', params: {'class_id': classId});
     final list = data['assignments'] as List;
-    return list.map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<AssignmentModel> getAssignment(String assignmentId) async {
@@ -14,7 +16,8 @@ class AssignmentService {
     return AssignmentModel.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<Map<String, dynamic>> createAssignment(Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> createAssignment(
+      Map<String, dynamic> body) async {
     final data = await apiPost('/assignments', data: body);
     return data as Map<String, dynamic>;
   }

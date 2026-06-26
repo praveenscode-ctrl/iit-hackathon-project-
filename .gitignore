@@ -50,3 +50,17 @@ Frontend/ios/Flutter/Flutter.podspec
 # OS
 .DS_Store
 Thumbs.db
+
+# Backups
+backup_docs/
+*.xlsx
+*.xlsx.tmp
+*.xlsx.test
+bulk_test.xlsx
+template -1.xlsx
+template.xlsx
+*.log
+Backend/.env.test
+Backend/scratch/
+
+

@@ -5,7 +5,9 @@ class ClassService {
   Future<List<ClassModel>> getClasses() async {
     final data = await apiGet('/classes');
     final list = data['classes'] as List;
-    return list.map((e) => ClassModel.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => ClassModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getMyClasses() async {
@@ -49,13 +51,15 @@ class ClassService {
     await apiPatch('/classes/$classId/students/$studentId/approve', data: {});
   }
 
-  Future<void> rejectStudent(String classId, String studentId, {String? reason}) async {
+  Future<void> rejectStudent(String classId, String studentId,
+      {String? reason}) async {
     await apiPatch('/classes/$classId/students/$studentId/reject', data: {
       'reason': reason,
     });
   }
 
-  Future<void> addCoMentor(String classId, {required String fullName, required String email}) async {
+  Future<void> addCoMentor(String classId,
+      {required String fullName, required String email}) async {
     await apiPost('/classes/$classId/co-mentors', data: {
       'full_name': fullName,
       'email': email,

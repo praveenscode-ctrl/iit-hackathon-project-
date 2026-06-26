@@ -39,8 +39,12 @@ class TrackerCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(studentName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text(registrationId, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                Text(studentName,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(registrationId,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF9CA3AF))),
               ],
             ),
           ),
@@ -53,10 +57,16 @@ class TrackerCard extends StatelessWidget {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(trackerStatus, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                child: Text(trackerStatus,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600)),
               ),
               if (submittedAt != null)
-                Text(submittedAt!, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                Text(submittedAt!,
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFF9CA3AF))),
             ],
           ),
         ],

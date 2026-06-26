@@ -13,7 +13,8 @@ class ServerWakeupWidget extends StatelessWidget {
         const SizedBox(height: 20),
         const Text(
           'Server is starting up...',
-          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+          style: TextStyle(
+              color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 6),
         Text(

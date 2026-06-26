@@ -25,11 +25,15 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       final url = data['download_url'] as String?;
       if (url != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Template URL: $url'), action: SnackBarAction(label: 'Open', onPressed: () {})),
+          SnackBar(
+              content: Text('Template URL: $url'),
+              action: SnackBarAction(label: 'Open', onPressed: () {})),
         );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
   }
 
@@ -46,7 +50,11 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       return;
     }
 
-    setState(() { _uploading = true; _error = null; _batchResult = null; });
+    setState(() {
+      _uploading = true;
+      _error = null;
+      _batchResult = null;
+    });
 
     try {
       var bytes = file.bytes;
@@ -64,14 +72,21 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
 
       final resp = await dio.post('/provision/bulk-import', data: formData);
       final batchId = resp.data['batch_id'] as String;
-      setState(() { _batchId = batchId; _polling = true; });
+      setState(() {
+        _batchId = batchId;
+        _polling = true;
+      });
       await _pollStatus(batchId);
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
       setState(() => _error = 'Upload failed: $e');
     } finally {
-      if (mounted) setState(() { _uploading = false; _polling = false; });
+      if (mounted)
+        setState(() {
+          _uploading = false;
+          _polling = false;
+        });
     }
   }
 
@@ -81,11 +96,16 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       try {
         final data = await apiGet('/provision/bulk-import/$batchId');
         final status = data['status'] as String?;
-        if (status == 'COMPLETED' || status == 'PARTIAL' || status == 'FAILED') {
-          if (mounted) setState(() => _batchResult = data as Map<String, dynamic>);
+        if (status == 'COMPLETED' ||
+            status == 'PARTIAL' ||
+            status == 'FAILED') {
+          if (mounted)
+            setState(() => _batchResult = data as Map<String, dynamic>);
           break;
         }
-      } catch (_) { break; }
+      } catch (_) {
+        break;
+      }
     }
   }
 
@@ -98,7 +118,8 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Import Classes, Mentors & Students', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text('Import Classes, Mentors & Students',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             const Text(
               'Download the template, fill in the 3 sheets (Classes → Mentors → Students), then upload.',
@@ -109,7 +130,8 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
               onPressed: _downloadTemplate,
               icon: const Icon(Icons.download_outlined),
               label: const Text('Download Template'),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 46)),
+              style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 46)),
             ),
             const SizedBox(height: 12),
             Container(
@@ -119,25 +141,39 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.amber.shade200),
               ),
-              child: const Text('⚠️ Only .xlsx files are accepted. Large files may take longer to process.', style: TextStyle(fontSize: 12)),
+              child: const Text(
+                  '⚠️ Only .xlsx files are accepted. Large files may take longer to process.',
+                  style: TextStyle(fontSize: 12)),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: (_uploading || _polling) ? null : _pickAndUpload,
               icon: const Icon(Icons.upload_file_outlined),
-              label: Text(_uploading ? 'Uploading...' : _polling ? 'Processing...' : 'Select & Upload File'),
+              label: Text(_uploading
+                  ? 'Uploading...'
+                  : _polling
+                      ? 'Processing...'
+                      : 'Select & Upload File'),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade200)),
-                child: Text(_error!, style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
+                decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200)),
+                child: Text(_error!,
+                    style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
               ),
             ],
             if (_polling && _batchResult == null) ...[
               const SizedBox(height: 20),
-              const Row(children: [CircularProgressIndicator(), SizedBox(width: 16), Text('Processing your file...')]),
+              const Row(children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text('Processing your file...')
+              ]),
             ],
             if (_batchResult != null) ...[
               const SizedBox(height: 20),
@@ -160,25 +196,37 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       children: [
         Row(
           children: [
-            Icon(isSuccess ? Icons.check_circle : Icons.error, color: isSuccess ? Colors.green : Colors.red),
+            Icon(isSuccess ? Icons.check_circle : Icons.error,
+                color: isSuccess ? Colors.green : Colors.red),
             const SizedBox(width: 8),
-            Text('Import $status', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isSuccess ? Colors.green : Colors.red)),
+            Text('Import $status',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isSuccess ? Colors.green : Colors.red)),
           ],
         ),
         if (summary.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text('Classes: ${summary['classes_created'] ?? 0} · Mentors: ${summary['mentors_created'] ?? 0} · Students: ${summary['students_created'] ?? 0}',
+          Text(
+              'Classes: ${summary['classes_created'] ?? 0} · Mentors: ${summary['mentors_created'] ?? 0} · Students: ${summary['students_created'] ?? 0}',
               style: const TextStyle(fontSize: 13, color: Color(0xFF374151))),
         ],
         if (errors.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text('Errors', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red)),
+          const Text('Errors',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red)),
           const SizedBox(height: 6),
           ...errors.map((e) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text('• Sheet: ${e['sheet']} Row: ${e['row']} — ${e['message']}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF374151))),
-          )),
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                    '• Sheet: ${e['sheet']} Row: ${e['row']} — ${e['message']}',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF374151))),
+              )),
         ],
       ],
     );

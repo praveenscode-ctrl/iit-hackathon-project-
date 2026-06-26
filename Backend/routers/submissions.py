@@ -93,7 +93,7 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
                 "student_id": str(u.id),
                 "full_name": u.full_name,
                 "tracker_status": "LATE" if is_late else "SUBMITTED",
-                "submitted_at": s.submitted_at.isoformat() + "Z",
+                "submitted_at": s.submitted_at.isoformat(),
                 "is_late": is_late
             }
         }
@@ -106,7 +106,7 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
         
     return {
         "submission_id": str(s.id),
-        "submitted_at": s.submitted_at.isoformat() + "Z",
+        "submitted_at": s.submitted_at.isoformat(),
         "is_late": is_late,
         "version": new_version,
         "receipt": f"Submitted successfully at {s.submitted_at.strftime('%I:%M %p on %d %b %Y')}"
@@ -116,7 +116,7 @@ def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depe
 def get_my_submissions(db: Session = Depends(get_db), u: User = Depends(require_role(["STUDENT"]))):
     res = db.execute(text("""
         SELECT s.id as submission_id, s.assignment_id, a.title as assignment_title,
-               s.submission_type, s.submitted_at, s.is_late, s.version
+               s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version
         FROM submissions s
         JOIN assignments a ON a.id = s.assignment_id
         WHERE s.student_id = :user_id AND s.is_current = true
@@ -136,7 +136,7 @@ def get_submissions(assignment_id: str, db: Session = Depends(get_db), u: User =
         verify_admin_class_access(a.class_id, u, db)
         
     res = db.execute(text("""
-        SELECT s.id as submission_id, s.student_id, u.full_name as student_name,
+        SELECT s.id, s.student_id, u.full_name, u.registration_id,
                s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version
         FROM submissions s
         JOIN users u ON u.id = s.student_id
@@ -144,4 +144,20 @@ def get_submissions(assignment_id: str, db: Session = Depends(get_db), u: User =
         ORDER BY s.submitted_at DESC
     """), {"assignment_id": assignment_id}).fetchall()
     
-    return {"submissions": [dict(r._mapping) for r in res]}
+    submissions_list = []
+    for r in res:
+        submissions_list.append({
+            "id": str(r.id),
+            "student_id": str(r.student_id),
+            "student": {
+                "full_name": r.full_name,
+                "registration_id": r.registration_id
+            },
+            "submission_type": r.submission_type,
+            "file_url": r.file_url,
+            "text_answer": r.text_answer,
+            "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
+            "is_late": r.is_late,
+            "version": r.version
+        })
+    return {"submissions": submissions_list}

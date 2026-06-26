@@ -6,7 +6,8 @@ class AssignmentCard extends StatelessWidget {
   final AssignmentModel assignment;
   final VoidCallback onTap;
 
-  const AssignmentCard({super.key, required this.assignment, required this.onTap});
+  const AssignmentCard(
+      {super.key, required this.assignment, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,8 @@ class AssignmentCard extends StatelessWidget {
 
     String deadline = 'No deadline';
     if (assignment.deadlineAt != null) {
-      deadline = DateFormat('d MMM yyyy, h:mm a').format(assignment.deadlineAt!.toLocal());
+      deadline = DateFormat('d MMM yyyy, h:mm a')
+          .format(assignment.deadlineAt!.toLocal());
     }
 
     return Card(
@@ -36,18 +38,23 @@ class AssignmentCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       assignment.title,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       assignment.status,
-                      style: TextStyle(fontSize: 11, color: statusColor, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: statusColor,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -58,19 +65,24 @@ class AssignmentCard extends StatelessWidget {
                   assignment.description!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  style:
+                      const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
                 ),
               ],
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.schedule, size: 14, color: Color(0xFF9CA3AF)),
+                  const Icon(Icons.schedule,
+                      size: 14, color: Color(0xFF9CA3AF)),
                   const SizedBox(width: 4),
-                  Text(deadline, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                  Text(deadline,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF9CA3AF))),
                   const Spacer(),
                   Text(
                     assignment.submissionType,
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                    style:
+                        const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
                   ),
                 ],
               ),

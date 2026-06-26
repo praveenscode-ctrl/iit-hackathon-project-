@@ -93,6 +93,7 @@ Future<dynamic> apiPatch(String path, {dynamic data}) async {
 
 void _throwApiError(DioException e) {
   final status = e.response?.statusCode ?? 0;
-  final detail = e.response?.data?['detail'] ?? e.message ?? 'Something went wrong';
+  final detail =
+      e.response?.data?['detail'] ?? e.message ?? 'Something went wrong';
   throw ApiException(status, detail.toString());
 }

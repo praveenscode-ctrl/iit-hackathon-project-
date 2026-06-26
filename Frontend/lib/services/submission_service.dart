@@ -19,6 +19,8 @@ class SubmissionService {
   Future<List<SubmissionModel>> getMySubmissions() async {
     final data = await apiGet('/submissions/my');
     final list = data['submissions'] as List;
-    return list.map((e) => SubmissionModel.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => SubmissionModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

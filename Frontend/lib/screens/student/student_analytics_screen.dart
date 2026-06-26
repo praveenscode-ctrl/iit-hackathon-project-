@@ -20,10 +20,14 @@ class StudentAnalyticsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('My Analytics')),
       body: analytics.when(
-        loading: () => const LoadingWidget(message: 'Loading your analytics...'),
-        error: (e, _) => AppErrorWidget(message: e.toString(), onRetry: () => ref.invalidate(studentAnalyticsProvider(user.id))),
+        loading: () =>
+            const LoadingWidget(message: 'Loading your analytics...'),
+        error: (e, _) => AppErrorWidget(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(studentAnalyticsProvider(user.id))),
         data: (a) => RefreshIndicator(
-          onRefresh: () async => ref.invalidate(studentAnalyticsProvider(user.id)),
+          onRefresh: () async =>
+              ref.invalidate(studentAnalyticsProvider(user.id)),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -35,10 +39,16 @@ class StudentAnalyticsScreen extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFF1A56DB).withOpacity(0.1),
+                        backgroundColor:
+                            const Color(0xFF1A56DB).withOpacity(0.1),
                         child: Text(
-                          a.fullName.isNotEmpty ? a.fullName[0].toUpperCase() : '?',
-                          style: const TextStyle(fontSize: 22, color: Color(0xFF1A56DB), fontWeight: FontWeight.bold),
+                          a.fullName.isNotEmpty
+                              ? a.fullName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                              fontSize: 22,
+                              color: Color(0xFF1A56DB),
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -46,9 +56,13 @@ class StudentAnalyticsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(a.fullName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                            Text(a.fullName,
+                                style: const TextStyle(
+                                    fontSize: 17, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 2),
-                            Text(a.className, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                            Text(a.className,
+                                style: const TextStyle(
+                                    fontSize: 13, color: Color(0xFF6B7280))),
                             const SizedBox(height: 6),
                             RiskBadge(riskLevel: a.riskLevel),
                           ],
@@ -62,25 +76,40 @@ class StudentAnalyticsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
 
               // stats
-              const Text('Overall Performance', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const Text('Overall Performance',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: _statTile('Assigned', '${a.totalAssigned}', Colors.blue)),
+                  Expanded(
+                      child: _statTile(
+                          'Assigned', '${a.totalAssigned}', Colors.blue)),
                   const SizedBox(width: 8),
-                  Expanded(child: _statTile('Submitted', '${a.totalSubmitted}', Colors.green)),
+                  Expanded(
+                      child: _statTile(
+                          'Submitted', '${a.totalSubmitted}', Colors.green)),
                   const SizedBox(width: 8),
-                  Expanded(child: _statTile('Missed', '${a.totalMissed}', Colors.red)),
+                  Expanded(
+                      child:
+                          _statTile('Missed', '${a.totalMissed}', Colors.red)),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: _statTile('Late', '${a.totalLate}', Colors.orange)),
+                  Expanded(
+                      child:
+                          _statTile('Late', '${a.totalLate}', Colors.orange)),
                   const SizedBox(width: 8),
-                  Expanded(child: _statTile('Streak', '${a.currentStreak}🔥', Colors.purple)),
+                  Expanded(
+                      child: _statTile(
+                          'Streak', '${a.currentStreak}🔥', Colors.purple)),
                   const SizedBox(width: 8),
-                  Expanded(child: _statTile('Completion', '${a.completionRate.toStringAsFixed(0)}%', Colors.teal)),
+                  Expanded(
+                      child: _statTile(
+                          'Completion',
+                          '${a.completionRate.toStringAsFixed(0)}%',
+                          Colors.teal)),
                 ],
               ),
 
@@ -88,14 +117,17 @@ class StudentAnalyticsScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     child: Row(
                       children: [
-                        const Icon(Icons.access_time, size: 16, color: Color(0xFF6B7280)),
+                        const Icon(Icons.access_time,
+                            size: 16, color: Color(0xFF6B7280)),
                         const SizedBox(width: 8),
                         Text(
                           'Avg submission delay: ${a.avgSubmissionDelayHours!.toStringAsFixed(1)} hrs',
-                          style: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+                          style: const TextStyle(
+                              fontSize: 13, color: Color(0xFF374151)),
                         ),
                       ],
                     ),
@@ -106,10 +138,12 @@ class StudentAnalyticsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
 
               // timeline
-              const Text('Assignment Timeline', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const Text('Assignment Timeline',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               if (a.assignmentHistory.isEmpty)
-                const Text('No assignment history yet', style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)))
+                const Text('No assignment history yet',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)))
               else
                 ...a.assignmentHistory.map((h) {
                   final statusColor = switch (h.trackerStatus) {
@@ -125,15 +159,24 @@ class StudentAnalyticsScreen extends ConsumerWidget {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 6),
                     child: ListTile(
-                      title: Text(h.title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                      subtitle: Text(deadlineStr, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                      title: Text(h.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 14)),
+                      subtitle: Text(deadlineStr,
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF9CA3AF))),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(h.trackerStatus, style: TextStyle(fontSize: 11, color: statusColor, fontWeight: FontWeight.w600)),
+                        child: Text(h.trackerStatus,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: statusColor,
+                                fontWeight: FontWeight.w600)),
                       ),
                     ),
                   );
@@ -154,9 +197,12 @@ class StudentAnalyticsScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Text(val, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          Text(val,
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
         ],
       ),
     );

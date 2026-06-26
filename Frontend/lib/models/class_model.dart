@@ -54,7 +54,8 @@ class ClassStudentModel {
     required this.joinedAt,
   });
 
-  factory ClassStudentModel.fromJson(Map<String, dynamic> j) => ClassStudentModel(
+  factory ClassStudentModel.fromJson(Map<String, dynamic> j) =>
+      ClassStudentModel(
         id: j['id'] as String,
         fullName: j['full_name'] as String,
         email: j['email'] as String,

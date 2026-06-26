@@ -19,8 +19,8 @@ def create_export(req: ExportRequest, background: BackgroundTasks, db: Session =
     if not a:
         raise HTTPException(404, "Assignment not found")
         
-    if a.status != 'CLOSED':
-        raise HTTPException(409, "Assignment must be CLOSED before exporting")
+    if a.status == 'DRAFT':
+        raise HTTPException(409, "Assignment must be published or closed before exporting")
         
     if u.role == "MENTOR":
         verify_mentor_class_access(str(a.class_id), u, db)

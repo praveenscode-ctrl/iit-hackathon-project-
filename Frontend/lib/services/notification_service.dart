@@ -6,12 +6,15 @@ class NotificationService {
     final data = await apiGet('/notifications');
     return data as Map<String, dynamic>;
   }
+
   Future<void> markRead(String notificationId) async {
     await apiPatch('/notifications/$notificationId/read');
   }
+
   Future<void> markAllRead() async {
     await apiPatch('/notifications/read-all');
   }
+
   Future<Map<String, dynamic>> setReminder({
     required String assignmentId,
     required String remindAt,

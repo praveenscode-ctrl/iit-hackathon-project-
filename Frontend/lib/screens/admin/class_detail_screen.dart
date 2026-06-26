@@ -23,10 +23,16 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Archive Class'),
-        content: const Text('This will archive the class. Students will no longer have access. Continue?'),
+        content: const Text(
+            'This will archive the class. Students will no longer have access. Continue?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Archive', style: TextStyle(color: Colors.red))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child:
+                  const Text('Archive', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -36,10 +42,13 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
       ref.invalidate(classDetailProvider(widget.classId));
       ref.invalidate(classListProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Class archived')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Class archived')));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -55,18 +64,25 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
           PopupMenuButton<String>(
             onSelected: (val) {
               if (val == 'archive') _archiveClass();
-              if (val == 'co-mentor') context.push('/admin/classes/${widget.classId}/co-mentor');
+              if (val == 'co-mentor')
+                context.push('/admin/classes/${widget.classId}/co-mentor');
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'co-mentor', child: Text('Add Co-Mentor')),
-              const PopupMenuItem(value: 'archive', child: Text('Archive Class', style: TextStyle(color: Colors.red))),
+              const PopupMenuItem(
+                  value: 'co-mentor', child: Text('Add Co-Mentor')),
+              const PopupMenuItem(
+                  value: 'archive',
+                  child: Text('Archive Class',
+                      style: TextStyle(color: Colors.red))),
             ],
           ),
         ],
       ),
       body: detail.when(
         loading: () => const LoadingWidget(message: 'Loading class...'),
-        error: (e, _) => AppErrorWidget(message: e.toString(), onRetry: () => ref.invalidate(classDetailProvider(widget.classId))),
+        error: (e, _) => AppErrorWidget(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(classDetailProvider(widget.classId))),
         data: (data) {
           final className = data['class_name'] as String? ?? '';
           final description = data['description'] as String?;
@@ -91,24 +107,41 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
                       children: [
                         Row(
                           children: [
-                            Expanded(child: Text(className, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                            Expanded(
+                                child: Text(className,
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold))),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: status == 'ACTIVE' ? Colors.green.shade50 : Colors.grey.shade100,
+                                color: status == 'ACTIVE'
+                                    ? Colors.green.shade50
+                                    : Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Text(status, style: TextStyle(fontSize: 11, color: status == 'ACTIVE' ? Colors.green.shade700 : Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                              child: Text(status,
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: status == 'ACTIVE'
+                                          ? Colors.green.shade700
+                                          : Colors.grey.shade600,
+                                      fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
                         if (description != null) ...[
                           const SizedBox(height: 8),
-                          Text(description, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                          Text(description,
+                              style: const TextStyle(
+                                  fontSize: 13, color: Color(0xFF6B7280))),
                         ],
                         if (academicYear != null) ...[
                           const SizedBox(height: 4),
-                          Text('Academic Year: $academicYear', style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                          Text('Academic Year: $academicYear',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Color(0xFF9CA3AF))),
                         ],
                       ],
                     ),
@@ -119,35 +152,63 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
 
                 // mentors section
                 if (mentors.isNotEmpty) ...[
-                  const Text('Mentors', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  const Text('Mentors',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   ...mentors.map((m) => Card(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    child: ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(m['full_name'] as String? ?? ''),
-                      subtitle: Text(m['email'] as String? ?? ''),
-                    ),
-                  )),
+                        margin: const EdgeInsets.only(bottom: 6),
+                        child: ListTile(
+                          leading:
+                              const CircleAvatar(child: Icon(Icons.person)),
+                          title: Text(m['full_name'] as String? ?? ''),
+                          subtitle: Text(m['email'] as String? ?? ''),
+                        ),
+                      )),
                   const SizedBox(height: 12),
                 ],
 
                 // quick nav actions
-                const Text('Manage', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                const Text('Manage',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: _navCard(context, 'Students', Icons.people_outline, () => context.push('/admin/classes/${widget.classId}/students'))),
+                    Expanded(
+                        child: _navCard(
+                            context,
+                            'Students',
+                            Icons.people_outline,
+                            () => context.push(
+                                '/admin/classes/${widget.classId}/students'))),
                     const SizedBox(width: 10),
-                    Expanded(child: _navCard(context, 'Approvals', Icons.how_to_reg_outlined, () => context.push('/admin/classes/${widget.classId}/approvals'))),
+                    Expanded(
+                        child: _navCard(
+                            context,
+                            'Approvals',
+                            Icons.how_to_reg_outlined,
+                            () => context.push(
+                                '/admin/classes/${widget.classId}/approvals'))),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Expanded(child: _navCard(context, 'Analytics', Icons.bar_chart, () => context.push('/admin/analytics/${widget.classId}'))),
+                    Expanded(
+                        child: _navCard(
+                            context,
+                            'Analytics',
+                            Icons.bar_chart,
+                            () => context
+                                .push('/admin/analytics/${widget.classId}'))),
                     const SizedBox(width: 10),
-                    Expanded(child: _navCard(context, 'Bulk Import', Icons.upload_file_outlined, () => context.push('/admin/bulk-import'))),
+                    Expanded(
+                        child: _navCard(
+                            context,
+                            'Bulk Import',
+                            Icons.upload_file_outlined,
+                            () => context.push('/admin/bulk-import'))),
                   ],
                 ),
 
@@ -160,15 +221,27 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
                   data: (a) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Analytics Snapshot', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      const Text('Analytics Snapshot',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Expanded(child: _miniStat('Completion', '${a.avgCompletion.toStringAsFixed(1)}%', Colors.green)),
+                          Expanded(
+                              child: _miniStat(
+                                  'Completion',
+                                  '${a.avgCompletion.toStringAsFixed(1)}%',
+                                  Colors.green)),
                           const SizedBox(width: 10),
-                          Expanded(child: _miniStat('Miss Rate', '${a.avgMissRate.toStringAsFixed(1)}%', Colors.red)),
+                          Expanded(
+                              child: _miniStat(
+                                  'Miss Rate',
+                                  '${a.avgMissRate.toStringAsFixed(1)}%',
+                                  Colors.red)),
                           const SizedBox(width: 10),
-                          Expanded(child: _miniStat('High Risk', '${a.highRiskCount}', Colors.orange)),
+                          Expanded(
+                              child: _miniStat('High Risk',
+                                  '${a.highRiskCount}', Colors.orange)),
                         ],
                       ),
                     ],
@@ -182,7 +255,8 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
     );
   }
 
-  Widget _navCard(BuildContext context, String label, IconData icon, VoidCallback onTap) {
+  Widget _navCard(
+      BuildContext context, String label, IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -196,7 +270,11 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
           children: [
             Icon(icon, color: const Color(0xFF1A56DB), size: 22),
             const SizedBox(height: 6),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF374151))),
           ],
         ),
       ),
@@ -212,8 +290,11 @@ class _ClassDetailScreenState extends ConsumerState<ClassDetailScreen> {
       ),
       child: Column(
         children: [
-          Text(val, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-          Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+          Text(val,
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
         ],
       ),
     );

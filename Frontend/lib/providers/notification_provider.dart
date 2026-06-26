@@ -4,15 +4,19 @@ import '../services/notification_service.dart';
 
 final _svc = NotificationService();
 
-final notificationsProvider = StateNotifierProvider<NotificationNotifier, AsyncValue<List<NotificationModel>>>((ref) {
+final notificationsProvider = StateNotifierProvider<NotificationNotifier,
+    AsyncValue<List<NotificationModel>>>((ref) {
   return NotificationNotifier();
 });
 
-class NotificationNotifier extends StateNotifier<AsyncValue<List<NotificationModel>>> {
+class NotificationNotifier
+    extends StateNotifier<AsyncValue<List<NotificationModel>>> {
   NotificationNotifier() : super(const AsyncValue.loading());
 
-  Future<void> load() async {
-    state = const AsyncValue.loading();
+  Future<void> load({bool silent = false}) async {
+    if (!silent) {
+      state = const AsyncValue.loading();
+    }
     try {
       final data = await _svc.getNotifications();
       final list = (data['notifications'] as List)
@@ -20,12 +24,16 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<NotificationMod
           .toList();
       state = AsyncValue.data(list);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (!silent) {
+        state = AsyncValue.error(e, st);
+      }
     }
   }
 
   Future<void> markRead(String id) async {
-    await _svc.markRead(id);
+    try {
+      await _svc.markRead(id);
+    } catch (_) {}
     state.whenData((list) {
       state = AsyncValue.data(
         list.map((n) => n.id == id ? _markOne(n) : n).toList(),
@@ -40,8 +48,7 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<NotificationMod
     });
   }
 
-  int get unreadCount =>
-      state.valueOrNull?.where((n) => !n.isRead).length ?? 0;
+  int get unreadCount => state.valueOrNull?.where((n) => !n.isRead).length ?? 0;
 
   NotificationModel _markOne(NotificationModel n) => NotificationModel(
         id: n.id,

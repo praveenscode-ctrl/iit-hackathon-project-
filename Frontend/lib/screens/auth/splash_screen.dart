@@ -41,7 +41,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     wakeupTimer.cancel();
-    if (mounted) setState(() { _showWakeup = false; _statusText = 'Checking session...'; });
+    if (mounted)
+      setState(() {
+        _showWakeup = false;
+        _statusText = 'Checking session...';
+      });
 
     final token = await AuthStorage.getAccessToken();
     if (token == null) {
@@ -76,16 +80,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.assignment_turned_in, size: 72, color: Colors.white),
+              const Icon(Icons.assignment_turned_in,
+                  size: 72, color: Colors.white),
               const SizedBox(height: 16),
               const Text(
                 'AssignHub',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               const SizedBox(height: 4),
               Text(
                 'Assignment Management Platform',
-                style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.75)),
+                style: TextStyle(
+                    fontSize: 13, color: Colors.white.withOpacity(0.75)),
               ),
               const SizedBox(height: 48),
               if (_showWakeup)
@@ -95,7 +104,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   children: [
                     const CircularProgressIndicator(color: Colors.white),
                     const SizedBox(height: 16),
-                    Text(_statusText, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                    Text(_statusText,
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 13)),
                   ],
                 ),
             ],

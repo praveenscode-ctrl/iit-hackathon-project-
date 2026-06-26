@@ -6,19 +6,24 @@ import '../services/assignment_service.dart';
 
 final _svc = AssignmentService();
 
-final assignmentsProvider = FutureProvider.family<List<AssignmentModel>, String>((ref, classId) {
+final assignmentsProvider =
+    FutureProvider.family<List<AssignmentModel>, String>((ref, classId) {
   return _svc.getAssignments(classId);
 });
 
-final assignmentDetailProvider = FutureProvider.family<AssignmentModel, String>((ref, assignmentId) {
+final assignmentDetailProvider =
+    FutureProvider.family<AssignmentModel, String>((ref, assignmentId) {
   return _svc.getAssignment(assignmentId);
 });
 
-final trackerProvider = FutureProvider.family<TrackerModel, String>((ref, assignmentId) {
+final trackerProvider =
+    FutureProvider.family<TrackerModel, String>((ref, assignmentId) {
   return _svc.getTracker(assignmentId);
 });
 
-final submissionsForAssignmentProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, assignmentId) {
+final submissionsForAssignmentProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, assignmentId) {
   return _svc.getSubmissions(assignmentId);
 });
 

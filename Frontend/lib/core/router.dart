@@ -48,41 +48,57 @@ final router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-    GoRoute(path: '/admin/signup', builder: (_, __) => const AdminSignupScreen()),
+    GoRoute(
+        path: '/admin/signup', builder: (_, __) => const AdminSignupScreen()),
     GoRoute(
       path: '/admin/otp',
       builder: (_, state) => OtpVerifyScreen(email: state.extra as String),
     ),
 
     // ── admin ──
-    GoRoute(path: '/admin/dashboard', builder: (_, __) => const AdminDashboardScreen()),
-    GoRoute(path: '/admin/classes', builder: (_, __) => const ClassListScreen()),
-    GoRoute(path: '/admin/classes/new', builder: (_, __) => const CreateClassScreen()),
+    GoRoute(
+        path: '/admin/dashboard',
+        builder: (_, __) => const AdminDashboardScreen()),
+    GoRoute(
+        path: '/admin/classes', builder: (_, __) => const ClassListScreen()),
+    GoRoute(
+        path: '/admin/classes/new',
+        builder: (_, __) => const CreateClassScreen()),
     GoRoute(
       path: '/admin/classes/:classId',
-      builder: (_, state) => ClassDetailScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          ClassDetailScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/admin/classes/:classId/students',
-      builder: (_, state) => ClassStudentsScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          ClassStudentsScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/admin/classes/:classId/approvals',
-      builder: (_, state) => AdminApprovalsScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          AdminApprovalsScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/admin/classes/:classId/co-mentor',
-      builder: (_, state) => AddCoMentorScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          AddCoMentorScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/admin/students/:studentId',
-      builder: (_, state) => AdminStudentProfileScreen(studentId: state.pathParameters['studentId']!),
+      builder: (_, state) => AdminStudentProfileScreen(
+          studentId: state.pathParameters['studentId']!),
     ),
-    GoRoute(path: '/admin/bulk-import', builder: (_, __) => const BulkImportScreen()),
-    GoRoute(path: '/admin/analytics', builder: (_, __) => const AnalyticsOverviewScreen()),
+    GoRoute(
+        path: '/admin/bulk-import',
+        builder: (_, __) => const BulkImportScreen()),
+    GoRoute(
+        path: '/admin/analytics',
+        builder: (_, __) => const AnalyticsOverviewScreen()),
     GoRoute(
       path: '/admin/analytics/:classId',
-      builder: (_, state) => ClassAnalyticsDrillScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          ClassAnalyticsDrillScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/admin/ai',
@@ -90,30 +106,38 @@ final router = GoRouter(
     ),
 
     // ── mentor ──
-    GoRoute(path: '/mentor/dashboard', builder: (_, __) => const MentorDashboardScreen()),
+    GoRoute(
+        path: '/mentor/dashboard',
+        builder: (_, __) => const MentorDashboardScreen()),
     GoRoute(
       path: '/mentor/classes/:classId/students',
-      builder: (_, state) => MentorStudentListScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          MentorStudentListScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/mentor/students/:studentId',
-      builder: (_, state) => MentorStudentProfileScreen(studentId: state.pathParameters['studentId']!),
+      builder: (_, state) => MentorStudentProfileScreen(
+          studentId: state.pathParameters['studentId']!),
     ),
     GoRoute(
       path: '/mentor/classes/:classId/approvals',
-      builder: (_, state) => MentorApprovalsScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          MentorApprovalsScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/mentor/classes/:classId/assignments',
-      builder: (_, state) => MentorAssignmentListScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          MentorAssignmentListScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/mentor/classes/:classId/assignments/new',
-      builder: (_, state) => CreateAssignmentScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          CreateAssignmentScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/mentor/assignments/:assignmentId/tracker',
-      builder: (_, state) => AssignmentTrackerScreen(assignmentId: state.pathParameters['assignmentId']!),
+      builder: (_, state) => AssignmentTrackerScreen(
+          assignmentId: state.pathParameters['assignmentId']!),
     ),
     GoRoute(
       path: '/mentor/assignments/:assignmentId/submissions',
@@ -123,20 +147,27 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/mentor/classes/:classId/analytics',
-      builder: (_, state) => MentorClassAnalyticsScreen(classId: state.pathParameters['classId']!),
+      builder: (_, state) =>
+          MentorClassAnalyticsScreen(classId: state.pathParameters['classId']!),
     ),
     GoRoute(
       path: '/mentor/assignments/:assignmentId/analytics',
-      builder: (_, state) => MentorAssignmentAnalyticsScreen(assignmentId: state.pathParameters['assignmentId']!),
+      builder: (_, state) => MentorAssignmentAnalyticsScreen(
+          assignmentId: state.pathParameters['assignmentId']!),
     ),
 
     // ── student ──
-    GoRoute(path: '/student/dashboard', builder: (_, __) => const StudentDashboardScreen()),
+    GoRoute(
+        path: '/student/dashboard',
+        builder: (_, __) => const StudentDashboardScreen()),
     GoRoute(
       path: '/student/assignments/:assignmentId',
-      builder: (_, state) => StudentAssignmentDetailScreen(assignmentId: state.pathParameters['assignmentId']!),
+      builder: (_, state) => StudentAssignmentDetailScreen(
+          assignmentId: state.pathParameters['assignmentId']!),
     ),
-    GoRoute(path: '/student/submissions', builder: (_, __) => const StudentSubmissionsScreen()),
+    GoRoute(
+        path: '/student/submissions',
+        builder: (_, __) => const StudentSubmissionsScreen()),
     GoRoute(
       path: '/student/analytics',
       builder: (_, state) => const StudentAnalyticsScreen(),

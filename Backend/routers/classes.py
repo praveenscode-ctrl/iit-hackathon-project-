@@ -65,13 +65,20 @@ def my_classes(db: Session = Depends(get_db), u: User = Depends(require_role(["M
     ).all()
     res = []
     for m, c in memberships:
+        sc = db.query(func.count(ClassMembership.id)).filter(
+            ClassMembership.class_id == c.id, 
+            ClassMembership.member_role == 'STUDENT', 
+            ClassMembership.status == 'ACTIVE'
+        ).scalar()
         res.append({
             "id": str(c.id),
             "class_name": c.class_name,
             "status": c.status,
-            "is_primary_mentor": m.is_primary_mentor
+            "is_primary_mentor": m.is_primary_mentor,
+            "student_count": sc
         })
     return {"classes": res}
+
 
 @router.get("/{class_id}")
 def get_class(class_id: str, db: Session = Depends(get_db), u: User = Depends(get_current_user)):

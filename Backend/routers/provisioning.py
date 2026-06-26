@@ -60,6 +60,7 @@ from services import s3_service
 
 @router.get("/bulk-import/template")
 def get_template(u: User = Depends(require_role(["ADMIN"]))):
+    import tempfile
     wb = openpyxl.Workbook()
     ws1 = wb.active
     ws1.title = "Classes"
@@ -74,15 +75,16 @@ def get_template(u: User = Depends(require_role(["ADMIN"]))):
     bucket = os.getenv("S3_BUCKET_NAME")
     region = os.getenv("AWS_REGION")
     
-    tmp_path = "/tmp/template.xlsx"
-    os.makedirs("/tmp", exist_ok=True)
-    wb.save(tmp_path)
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
+        wb.save(tmp_file.name)
+        tmp_path = tmp_file.name
     
     s3_key = "templates/bulk_import_template.xlsx"
     s3_service.s3.upload_file(
         tmp_path, bucket, s3_key,
         ExtraArgs={"ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
     )
+    os.unlink(tmp_path)
     
     file_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_key}"
     download_data = s3_service.get_presigned_download(file_url)
@@ -90,18 +92,19 @@ def get_template(u: User = Depends(require_role(["ADMIN"]))):
 
 @router.post("/bulk-import", status_code=202)
 def upload_bulk(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db), u: User = Depends(require_role(["ADMIN"]))):
+    import tempfile
     b = BulkImportBatch(admin_id=u.id, file_name=file.filename, status='UPLOADED')
     db.add(b)
     db.commit()
     db.refresh(b)
     
-    tmp = f"/tmp/{b.id}.xlsx"
-    os.makedirs("/tmp", exist_ok=True)
-    with open(tmp, "wb") as f:
-        f.write(file.file.read())
+    # Use Python tempfile for cross-platform compatibility (works on Render)
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
+        tmp_file.write(file.file.read())
+        tmp_path = tmp_file.name
         
     from services.bulk_import_worker import process_bulk_import
-    background_tasks.add_task(process_bulk_import, str(b.id), tmp, str(u.id))
+    background_tasks.add_task(process_bulk_import, str(b.id), tmp_path, str(u.id))
     
     return {"batch_id": str(b.id), "status": "UPLOADED", "message": "Processing started"}
 

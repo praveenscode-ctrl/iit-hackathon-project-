@@ -28,9 +28,12 @@ class CompletionBarChart extends StatelessWidget {
               gridData: const FlGridData(show: false),
               borderData: FlBorderData(show: false),
               titlesData: FlTitlesData(
-                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -40,8 +43,11 @@ class CompletionBarChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          labels[i].length > 8 ? '${labels[i].substring(0, 7)}…' : labels[i],
-                          style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                          labels[i].length > 8
+                              ? '${labels[i].substring(0, 7)}…'
+                              : labels[i],
+                          style: const TextStyle(
+                              fontSize: 10, color: Color(0xFF6B7280)),
                         ),
                       );
                     },
@@ -99,10 +105,26 @@ class StatusDonutChart extends StatelessWidget {
               sectionsSpace: 2,
               centerSpaceRadius: 35,
               sections: [
-                PieChartSectionData(value: submitted.toDouble(), color: Colors.green.shade500, title: '', radius: 28),
-                PieChartSectionData(value: pending.toDouble(), color: Colors.grey.shade400, title: '', radius: 28),
-                PieChartSectionData(value: missed.toDouble(), color: Colors.red.shade400, title: '', radius: 28),
-                PieChartSectionData(value: late.toDouble(), color: Colors.orange.shade400, title: '', radius: 28),
+                PieChartSectionData(
+                    value: submitted.toDouble(),
+                    color: Colors.green.shade500,
+                    title: '',
+                    radius: 28),
+                PieChartSectionData(
+                    value: pending.toDouble(),
+                    color: Colors.grey.shade400,
+                    title: '',
+                    radius: 28),
+                PieChartSectionData(
+                    value: missed.toDouble(),
+                    color: Colors.red.shade400,
+                    title: '',
+                    radius: 28),
+                PieChartSectionData(
+                    value: late.toDouble(),
+                    color: Colors.orange.shade400,
+                    title: '',
+                    radius: 28),
               ],
             ),
           ),
@@ -125,11 +147,15 @@ class StatusDonutChart extends StatelessWidget {
   }
 
   Widget _dot(Color c, String label) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(width: 8, height: 8, decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
-      const SizedBox(width: 4),
-      Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
-    ],
-  );
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+        ],
+      );
 }

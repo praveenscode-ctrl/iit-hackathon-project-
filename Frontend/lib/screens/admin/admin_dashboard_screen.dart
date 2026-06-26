@@ -16,7 +16,8 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
@@ -45,10 +46,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ),
               if (ref.read(notificationsProvider.notifier).unreadCount > 0)
                 Positioned(
-                  right: 8, top: 8,
+                  right: 8,
+                  top: 8,
                   child: Container(
-                    width: 8, height: 8,
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
                   ),
                 ),
             ],
@@ -74,16 +78,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             // greeting
             Text(
               'Hi, ${user?.fullName ?? 'Admin'} 👋',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF111827)),
             ),
             const SizedBox(height: 4),
-            const Text('Here\'s your institution overview', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            const Text('Here\'s your institution overview',
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
             const SizedBox(height: 20),
 
             // overview stats
             overview.when(
-              loading: () => const LoadingWidget(message: 'Loading overview...'),
-              error: (e, _) => AppErrorWidget(message: e.toString(), onRetry: () => ref.invalidate(adminOverviewProvider)),
+              loading: () =>
+                  const LoadingWidget(message: 'Loading overview...'),
+              error: (e, _) => AppErrorWidget(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(adminOverviewProvider)),
               data: (data) => _buildOverviewSection(context, data),
             ),
 
@@ -106,20 +117,27 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Classes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                        TextButton(onPressed: () => context.push('/admin/classes'), child: const Text('View all')),
+                        const Text('Classes',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
+                        TextButton(
+                            onPressed: () => context.push('/admin/classes'),
+                            child: const Text('View all')),
                       ],
                     ),
                     const SizedBox(height: 8),
                     ...cls.take(3).map((c) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(c.className, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text('${c.studentCount} students · ${c.mentorCount} mentors'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/admin/classes/${c.id}'),
-                      ),
-                    )),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            title: Text(c.className,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                                '${c.studentCount} students · ${c.mentorCount} mentors'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/admin/classes/${c.id}'),
+                          ),
+                        )),
                   ],
                 );
               },
@@ -128,19 +146,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             const SizedBox(height: 20),
 
             // recent notifications
-            const Text('Recent Notifications', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Recent Notifications',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             notifs.when(
               loading: () => const LoadingWidget(),
-              error: (_, __) => const Text('Could not load notifications', style: TextStyle(color: Color(0xFF9CA3AF))),
+              error: (_, __) => const Text('Could not load notifications',
+                  style: TextStyle(color: Color(0xFF9CA3AF))),
               data: (list) {
-                if (list.isEmpty) return const Text('No notifications yet', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
+                if (list.isEmpty)
+                  return const Text('No notifications yet',
+                      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
                 return Card(
                   child: Column(
-                    children: list.take(5).map((n) => NotificationTile(
-                      notification: n,
-                      onTap: () => ref.read(notificationsProvider.notifier).markRead(n.id),
-                    )).toList(),
+                    children: list
+                        .take(5)
+                        .map((n) => NotificationTile(
+                              notification: n,
+                              onTap: () => ref
+                                  .read(notificationsProvider.notifier)
+                                  .markRead(n.id),
+                            ))
+                        .toList(),
                   ),
                 );
               },
@@ -156,11 +183,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildOverviewSection(BuildContext context, Map<String, dynamic> data) {
+  Widget _buildOverviewSection(
+      BuildContext context, Map<String, dynamic> data) {
     final totalClasses = data['total_classes'] ?? 0;
     final totalStudents = data['total_students'] ?? 0;
     final highRiskTotal = data['total_high_risk_students'] ?? 0;
-    final avgCompletion = (data['avg_completion_rate'] as num?)?.toDouble() ?? 0.0;
+    final avgCompletion =
+        (data['avg_completion_rate'] as num?)?.toDouble() ?? 0.0;
     final classesList = data['classes'] as List? ?? [];
 
     return Column(
@@ -168,27 +197,42 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: _statCard('Classes', '$totalClasses', Icons.school_outlined, Colors.blue)),
+            Expanded(
+                child: _statCard('Classes', '$totalClasses',
+                    Icons.school_outlined, Colors.blue)),
             const SizedBox(width: 12),
-            Expanded(child: _statCard('Students', '$totalStudents', Icons.people_outline, Colors.teal)),
+            Expanded(
+                child: _statCard('Students', '$totalStudents',
+                    Icons.people_outline, Colors.teal)),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _statCard('High Risk', '$highRiskTotal', Icons.warning_amber_outlined, Colors.red)),
+            Expanded(
+                child: _statCard('High Risk', '$highRiskTotal',
+                    Icons.warning_amber_outlined, Colors.red)),
             const SizedBox(width: 12),
-            Expanded(child: _statCard('Avg Completion', '${avgCompletion.toStringAsFixed(1)}%', Icons.check_circle_outline, Colors.green)),
+            Expanded(
+                child: _statCard(
+                    'Avg Completion',
+                    '${avgCompletion.toStringAsFixed(1)}%',
+                    Icons.check_circle_outline,
+                    Colors.green)),
           ],
         ),
         if (classesList.isNotEmpty) ...[
           const SizedBox(height: 20),
-          const Text('Class Completion Comparison', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const Text('Class Completion Comparison',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           CompletionBarChart(
             labels: classesList.map((c) => c['class_name'] as String).toList(),
-            values: classesList.map((c) => (c['avg_completion'] as num?)?.toDouble() ?? 0.0).toList(),
-            caption: 'Average assignment completion rate per class (from backend analytics)',
+            values: classesList
+                .map((c) => (c['avg_completion'] as num?)?.toDouble() ?? 0.0)
+                .toList(),
+            caption:
+                'Average assignment completion rate per class (from backend analytics)',
           ),
         ],
       ],
@@ -201,13 +245,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2))
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
@@ -215,8 +266,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), overflow: TextOverflow.ellipsis)),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF111827))),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF6B7280),
+                        overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
@@ -229,28 +288,38 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Quick Actions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const Text('Quick Actions',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _actionBtn(context, 'Classes', Icons.school_outlined, '/admin/classes')),
+            Expanded(
+                child: _actionBtn(context, 'Classes', Icons.school_outlined,
+                    '/admin/classes')),
             const SizedBox(width: 10),
-            Expanded(child: _actionBtn(context, 'Analytics', Icons.bar_chart, '/admin/analytics')),
+            Expanded(
+                child: _actionBtn(
+                    context, 'Analytics', Icons.bar_chart, '/admin/analytics')),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _actionBtn(context, 'Bulk Import', Icons.upload_file_outlined, '/admin/bulk-import')),
+            Expanded(
+                child: _actionBtn(context, 'Bulk Import',
+                    Icons.upload_file_outlined, '/admin/bulk-import')),
             const SizedBox(width: 10),
-            Expanded(child: _actionBtn(context, 'AI Query', Icons.psychology_outlined, '/admin/ai')),
+            Expanded(
+                child: _actionBtn(context, 'AI Query',
+                    Icons.psychology_outlined, '/admin/ai')),
           ],
         ),
       ],
     );
   }
 
-  Widget _actionBtn(BuildContext context, String label, IconData icon, String route) {
+  Widget _actionBtn(
+      BuildContext context, String label, IconData icon, String route) {
     return GestureDetector(
       onTap: () => context.push(route),
       child: Container(
@@ -264,7 +333,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           children: [
             Icon(icon, color: const Color(0xFF1A56DB), size: 22),
             const SizedBox(height: 6),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF374151))),
           ],
         ),
       ),

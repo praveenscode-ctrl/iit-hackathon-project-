@@ -12,7 +12,8 @@ class MentorDashboardScreen extends ConsumerStatefulWidget {
   const MentorDashboardScreen({super.key});
 
   @override
-  ConsumerState<MentorDashboardScreen> createState() => _MentorDashboardScreenState();
+  ConsumerState<MentorDashboardScreen> createState() =>
+      _MentorDashboardScreenState();
 }
 
 class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
@@ -51,53 +52,74 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
           children: [
             Text(
               'Hi, ${user?.fullName ?? 'Mentor'} 👋',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF111827)),
             ),
             const SizedBox(height: 4),
-            const Text('Manage your classes and assignments', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            const Text('Manage your classes and assignments',
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
             const SizedBox(height: 20),
-
-            const Text('My Classes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('My Classes',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             myClasses.when(
               loading: () => const LoadingWidget(message: 'Loading classes...'),
-              error: (e, _) => TextButton(onPressed: () => ref.invalidate(myClassesProvider), child: const Text('Retry')),
+              error: (e, _) => TextButton(
+                  onPressed: () => ref.invalidate(myClassesProvider),
+                  child: const Text('Retry')),
               data: (list) {
-                if (list.isEmpty) return const Text('No classes assigned yet', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
+                if (list.isEmpty)
+                  return const Text('No classes assigned yet',
+                      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
                 return Column(
                   children: list.map((c) {
-                    final classId = c['id'] as String? ?? c['class_id'] as String? ?? '';
+                    final classId =
+                        c['id'] as String? ?? c['class_id'] as String? ?? '';
                     final className = c['class_name'] as String? ?? '';
                     final studentCount = c['student_count'] ?? 0;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        leading: const Icon(Icons.school_outlined, color: Color(0xFF1A56DB)),
-                        title: Text(className, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        leading: const Icon(Icons.school_outlined,
+                            color: Color(0xFF1A56DB)),
+                        title: Text(className,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text('$studentCount students'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: classId.isNotEmpty ? () => _openClassMenu(context, classId, className) : null,
+                        onTap: classId.isNotEmpty
+                            ? () => _openClassMenu(context, classId, className)
+                            : null,
                       ),
                     );
                   }).toList(),
                 );
               },
             ),
-
             const SizedBox(height: 20),
-            const Text('Recent Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Recent Alerts',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             notifs.when(
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
               data: (list) {
-                if (list.isEmpty) return const Text('No notifications', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
+                if (list.isEmpty)
+                  return const Text('No notifications',
+                      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13));
                 return Card(
                   child: Column(
-                    children: list.take(4).map((n) => NotificationTile(
-                      notification: n,
-                      onTap: () => ref.read(notificationsProvider.notifier).markRead(n.id),
-                    )).toList(),
+                    children: list
+                        .take(4)
+                        .map((n) => NotificationTile(
+                              notification: n,
+                              onTap: () => ref
+                                  .read(notificationsProvider.notifier)
+                                  .markRead(n.id),
+                            ))
+                        .toList(),
                   ),
                 );
               },
@@ -111,7 +133,8 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
   void _openClassMenu(BuildContext context, String classId, String className) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
@@ -119,13 +142,39 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(className, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(className,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             const Divider(),
-            ListTile(leading: const Icon(Icons.people_outline), title: const Text('Students'), onTap: () { Navigator.pop(context); context.push('/mentor/classes/$classId/students'); }),
-            ListTile(leading: const Icon(Icons.how_to_reg_outlined), title: const Text('Approvals'), onTap: () { Navigator.pop(context); context.push('/mentor/classes/$classId/approvals'); }),
-            ListTile(leading: const Icon(Icons.assignment_outlined), title: const Text('Assignments'), onTap: () { Navigator.pop(context); context.push('/mentor/classes/$classId/assignments'); }),
-            ListTile(leading: const Icon(Icons.bar_chart), title: const Text('Analytics'), onTap: () { Navigator.pop(context); context.push('/mentor/classes/$classId/analytics'); }),
+            ListTile(
+                leading: const Icon(Icons.people_outline),
+                title: const Text('Students'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/mentor/classes/$classId/students');
+                }),
+            ListTile(
+                leading: const Icon(Icons.how_to_reg_outlined),
+                title: const Text('Approvals'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/mentor/classes/$classId/approvals');
+                }),
+            ListTile(
+                leading: const Icon(Icons.assignment_outlined),
+                title: const Text('Assignments'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/mentor/classes/$classId/assignments');
+                }),
+            ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: const Text('Analytics'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/mentor/classes/$classId/analytics');
+                }),
           ],
         ),
       ),

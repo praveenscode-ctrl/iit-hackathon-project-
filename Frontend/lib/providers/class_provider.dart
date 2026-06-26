@@ -12,14 +12,17 @@ final myClassesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) {
   return _svc.getMyClasses();
 });
 
-final classDetailProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, classId) {
+final classDetailProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, classId) {
   return _svc.getClassDetail(classId);
 });
 
-final classStudentsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, classId) {
+final classStudentsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, classId) {
   return _svc.getStudents(classId);
 });
 
-final approvalsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, classId) {
+final approvalsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, classId) {
   return _svc.getApprovals(classId);
 });

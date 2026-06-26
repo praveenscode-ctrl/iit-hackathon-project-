@@ -11,7 +11,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=10,            # 10 persistent connections
+    max_overflow=20,         # 20 extra burst connections
+    pool_pre_ping=True,      # test connection health before use (prevents stale conn errors)
+    pool_recycle=1800,       # recycle connections every 30 min (prevents Render PG timeout)
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Base(DeclarativeBase):

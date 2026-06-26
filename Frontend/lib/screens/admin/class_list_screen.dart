@@ -34,11 +34,14 @@ class ClassListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.school_outlined, size: 56, color: Color(0xFFD1D5DB)),
+                  Icon(Icons.school_outlined,
+                      size: 56, color: Color(0xFFD1D5DB)),
                   SizedBox(height: 12),
-                  Text('No classes yet', style: TextStyle(fontSize: 15, color: Color(0xFF9CA3AF))),
+                  Text('No classes yet',
+                      style: TextStyle(fontSize: 15, color: Color(0xFF9CA3AF))),
                   SizedBox(height: 4),
-                  Text('Tap + to create one', style: TextStyle(fontSize: 13, color: Color(0xFFD1D5DB))),
+                  Text('Tap + to create one',
+                      style: TextStyle(fontSize: 13, color: Color(0xFFD1D5DB))),
                 ],
               ),
             );
@@ -52,25 +55,37 @@ class ClassListScreen extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final c = list[i];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    title: Text(c.className, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    title: Text(c.className,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 15)),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (c.academicYear != null)
-                          Text(c.academicYear!, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                          Text(c.academicYear!,
+                              style: const TextStyle(
+                                  fontSize: 12, color: Color(0xFF9CA3AF))),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.people_outline, size: 13, color: Color(0xFF6B7280)),
+                            const Icon(Icons.people_outline,
+                                size: 13, color: Color(0xFF6B7280)),
                             const SizedBox(width: 4),
-                            Text('${c.studentCount} students', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                            Text('${c.studentCount} students',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xFF6B7280))),
                             const SizedBox(width: 12),
-                            const Icon(Icons.person_outline, size: 13, color: Color(0xFF6B7280)),
+                            const Icon(Icons.person_outline,
+                                size: 13, color: Color(0xFF6B7280)),
                             const SizedBox(width: 4),
-                            Text('${c.mentorCount} mentors', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                            Text('${c.mentorCount} mentors',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xFF6B7280))),
                           ],
                         ),
                       ],
@@ -79,7 +94,8 @@ class ClassListScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: c.status == 'ACTIVE'
                                 ? Colors.green.shade50
@@ -90,13 +106,16 @@ class ClassListScreen extends ConsumerWidget {
                             c.status,
                             style: TextStyle(
                               fontSize: 11,
-                              color: c.status == 'ACTIVE' ? Colors.green.shade700 : Colors.grey.shade600,
+                              color: c.status == 'ACTIVE'
+                                  ? Colors.green.shade700
+                                  : Colors.grey.shade600,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+                        const Icon(Icons.chevron_right,
+                            color: Color(0xFF9CA3AF)),
                       ],
                     ),
                     onTap: () => context.push('/admin/classes/${c.id}'),

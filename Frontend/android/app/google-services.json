@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "286841738253",
+    "project_id": "assignhub-e1ab9",
+    "storage_bucket": "assignhub-e1ab9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:286841738253:android:cc8a67d1ab21bb66967144",
+        "android_client_info": {
+          "package_name": "com.example.assignhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg2feGAhVWAOnXj4bESoUvS2bzKTJBi3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

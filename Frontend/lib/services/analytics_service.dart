@@ -12,7 +12,8 @@ class AnalyticsService {
     return ClassAnalyticsModel.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<List<Map<String, dynamic>>> getClassStudentsAnalytics(String classId) async {
+  Future<List<Map<String, dynamic>>> getClassStudentsAnalytics(
+      String classId) async {
     final data = await apiGet('/analytics/classes/$classId/students');
     return List<Map<String, dynamic>>.from(data['students'] as List);
   }
@@ -23,11 +24,13 @@ class AnalyticsService {
   }
 
   Future<List<Map<String, dynamic>>> getRiskStudents(String classId) async {
-    final data = await apiGet('/analytics/risk/students', params: {'class_id': classId});
+    final data =
+        await apiGet('/analytics/risk/students', params: {'class_id': classId});
     return List<Map<String, dynamic>>.from(data['at_risk_students'] as List);
   }
 
-  Future<Map<String, dynamic>> getAssignmentAnalytics(String assignmentId) async {
+  Future<Map<String, dynamic>> getAssignmentAnalytics(
+      String assignmentId) async {
     final data = await apiGet('/analytics/assignments/$assignmentId');
     return data as Map<String, dynamic>;
   }

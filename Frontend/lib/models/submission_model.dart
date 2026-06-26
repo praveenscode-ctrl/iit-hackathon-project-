@@ -3,6 +3,8 @@ class SubmissionModel {
   final String assignmentId;
   final String assignmentTitle;
   final String submissionType;
+  final String? fileUrl;
+  final String? textAnswer;
   final DateTime submittedAt;
   final bool isLate;
   final int version;
@@ -12,6 +14,8 @@ class SubmissionModel {
     required this.assignmentId,
     required this.assignmentTitle,
     required this.submissionType,
+    this.fileUrl,
+    this.textAnswer,
     required this.submittedAt,
     required this.isLate,
     required this.version,
@@ -22,7 +26,11 @@ class SubmissionModel {
         assignmentId: j['assignment_id'] as String,
         assignmentTitle: j['assignment_title'] as String,
         submissionType: j['submission_type'] as String,
-        submittedAt: DateTime.parse(j['submitted_at'] as String),
+        fileUrl: j['file_url'] as String?,
+        textAnswer: j['text_answer'] as String?,
+        submittedAt: DateTime.tryParse(
+                (j['submitted_at'] as String? ?? '').replaceAll(' ', 'T')) ??
+            DateTime.now(),
         isLate: j['is_late'] as bool,
         version: (j['version'] as num).toInt(),
       );

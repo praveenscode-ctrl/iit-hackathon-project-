@@ -26,13 +26,15 @@ def send_risk_alert(student_id: str, db: Session):
     )
     db.add(n)
     if student.fcm_token:
-        fcm_service.send_single_fcm(student.fcm_token, n.title, n.body, n.payload, db)
+        fcm_service.send_single_fcm(student.fcm_token, n.title, n.body)
 
 def recompute_student_analytics(student_id: str, class_id: str, db: Session):
-    closed_assignments = db.query(Assignment).filter(
+    active_assignments = db.query(Assignment).filter(
         Assignment.class_id == class_id,
-        Assignment.status == 'CLOSED'
+        Assignment.status.in_(['PUBLISHED', 'CLOSED'])
     ).order_by(Assignment.created_at.asc()).all()
+    
+    closed_assignments = [a for a in active_assignments if a.status == 'CLOSED']
     
     sa = db.query(StudentAnalytics).filter_by(student_id=student_id, class_id=class_id).first()
     prev_risk = sa.risk_level if sa else 'NORMAL'
@@ -42,7 +44,7 @@ def recompute_student_analytics(student_id: str, class_id: str, db: Session):
         db.add(sa)
         db.flush()
 
-    total_assigned = len(closed_assignments)
+    total_assigned = len(active_assignments)
     
     if total_assigned == 0:
         sa.total_assigned = 0
@@ -59,17 +61,17 @@ def recompute_student_analytics(student_id: str, class_id: str, db: Session):
         db.commit()
         return
 
-    assignment_ids = [a.id for a in closed_assignments]
+    all_assignment_ids = [a.id for a in active_assignments]
     submissions = db.query(Submission).filter(
         Submission.student_id == student_id,
-        Submission.assignment_id.in_(assignment_ids),
+        Submission.assignment_id.in_(all_assignment_ids),
         Submission.is_current == True
     ).all()
     
     submitted_ids = {s.assignment_id: s for s in submissions}
     
     total_submitted = len(submitted_ids)
-    total_missed = total_assigned - total_submitted
+    total_missed = sum(1 for a in closed_assignments if a.id not in submitted_ids)
     total_late = sum(1 for s in submissions if s.is_late)
     completion_rate = round((total_submitted / total_assigned) * 100, 2)
     
@@ -109,13 +111,15 @@ def recompute_student_analytics(student_id: str, class_id: str, db: Session):
             
     avg_delay = round(sum(delays) / len(delays), 2) if delays else None
     
-    if consecutive_misses >= 3:
+    if consecutive_misses >= 4:
+        risk_level = 'CRITICAL'
+    elif consecutive_misses >= 3:
         risk_level = 'HIGH'
     elif completion_rate < 40:
         risk_level = 'MEDIUM'
     elif completion_rate < 60:
         risk_level = 'LOW'
-    elif prev_risk == 'HIGH' and completion_rate >= 60:
+    elif prev_risk in ('HIGH', 'CRITICAL') and completion_rate >= 60:
         risk_level = 'RECOVERING'
     else:
         risk_level = 'NORMAL'
@@ -133,6 +137,7 @@ def recompute_student_analytics(student_id: str, class_id: str, db: Session):
     sa.last_computed_at = datetime.now(timezone.utc)
     
     db.commit()
+    recompute_class_analytics(class_id, db)
     
     if risk_level == 'HIGH' and prev_risk != 'HIGH':
         send_risk_alert(student_id, db)

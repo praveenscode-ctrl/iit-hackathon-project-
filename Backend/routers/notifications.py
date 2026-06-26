@@ -76,5 +76,5 @@ def create_reminder(req: ReminderRequest, db: Session = Depends(get_db), u: User
     
     scheduler.add_job(send_student_reminder_job, 'date', run_date=dt, args=[str(rj.id)], id=f"student_reminder_{rj.id}", replace_existing=True)
     
-    return {"reminder_id": str(rj.id), "remind_at": rj.remind_at.isoformat() + "Z"}
+    return {"reminder_id": str(rj.id), "remind_at": rj.remind_at.isoformat()}
 

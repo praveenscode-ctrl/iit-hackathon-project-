@@ -34,13 +34,18 @@ class _CreateClassScreenState extends State<CreateClassScreen> {
       return;
     }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       await _svc.createClass(
         className: name,
-        description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-        academicYear: _yearCtrl.text.trim().isEmpty ? null : _yearCtrl.text.trim(),
+        description:
+            _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+        academicYear:
+            _yearCtrl.text.trim().isEmpty ? null : _yearCtrl.text.trim(),
       );
       if (!mounted) return;
       context.pop();
@@ -65,7 +70,9 @@ class _CreateClassScreenState extends State<CreateClassScreen> {
             TextField(
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Class Name *', prefixIcon: Icon(Icons.school_outlined)),
+              decoration: const InputDecoration(
+                  labelText: 'Class Name *',
+                  prefixIcon: Icon(Icons.school_outlined)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -89,21 +96,29 @@ class _CreateClassScreenState extends State<CreateClassScreen> {
             if (_error != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.red.shade200),
                 ),
-                child: Text(_error!, style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
+                child: Text(_error!,
+                    style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
               ),
             ],
             const SizedBox(height: 28),
             ElevatedButton(
               onPressed: _loading ? null : _create,
               child: _loading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Create Class', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : const Text('Create Class',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ],
         ),

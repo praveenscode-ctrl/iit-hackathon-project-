@@ -4,7 +4,8 @@ import '../services/ai_service.dart';
 
 final _svc = AiService();
 
-final aiProvider = StateNotifierProvider<AiNotifier, AsyncValue<AiResponseModel?>>((ref) {
+final aiProvider =
+    StateNotifierProvider<AiNotifier, AsyncValue<AiResponseModel?>>((ref) {
   return AiNotifier();
 });
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/exceptions.dart';
+import '../../services/fcm_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -41,14 +42,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
+      final fcmToken = FcmService.instance.fcmToken;
       final user = await ref.read(authProvider.notifier).login(
-        email: email,
-        password: password,
-        registrationId: regId,
-      );
+            email: email,
+            password: password,
+            registrationId: regId,
+            fcmToken: fcmToken,
+          );
       if (!mounted) return;
       switch (user.role) {
         case 'ADMIN':
@@ -78,16 +84,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 32),
-              const Icon(Icons.assignment_turned_in, size: 48, color: Color(0xFF1A56DB)),
+              const Icon(Icons.assignment_turned_in,
+                  size: 48, color: Color(0xFF1A56DB)),
               const SizedBox(height: 16),
-              const Text('Welcome back', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+              const Text('Welcome back',
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF111827))),
               const SizedBox(height: 4),
-              const Text('Sign in to your account', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
+              const Text('Sign in to your account',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
               const SizedBox(height: 36),
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                decoration: const InputDecoration(
+                    labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -97,7 +110,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                    icon: Icon(_obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
@@ -114,7 +129,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_error != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(8),
@@ -122,9 +138,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, size: 16, color: Colors.red.shade700),
+                      Icon(Icons.error_outline,
+                          size: 16, color: Colors.red.shade700),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_error!, style: TextStyle(fontSize: 13, color: Colors.red.shade700))),
+                      Expanded(
+                          child: Text(_error!,
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.red.shade700))),
                     ],
                   ),
                 ),
@@ -133,14 +153,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ElevatedButton(
                 onPressed: _loading ? null : login,
                 child: _loading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('Sign In',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 20),
               Center(
                 child: TextButton(
                   onPressed: () => context.push('/admin/signup'),
-                  child: const Text("Admin? Create account", style: TextStyle(color: Color(0xFF1A56DB))),
+                  child: const Text("Admin? Create account",
+                      style: TextStyle(color: Color(0xFF1A56DB))),
                 ),
               ),
             ],

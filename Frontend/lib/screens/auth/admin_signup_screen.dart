@@ -33,11 +33,23 @@ class _AdminSignupScreenState extends State<AdminSignupScreen> {
     final email = _emailCtrl.text.trim();
     final pass = _passCtrl.text;
 
-    if (name.isEmpty) { setState(() => _error = 'Full name is required'); return; }
-    if (email.isEmpty || !email.contains('@')) { setState(() => _error = 'Enter a valid email'); return; }
-    if (pass.length < 6) { setState(() => _error = 'Password must be at least 6 characters'); return; }
+    if (name.isEmpty) {
+      setState(() => _error = 'Full name is required');
+      return;
+    }
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _error = 'Enter a valid email');
+      return;
+    }
+    if (pass.length < 6) {
+      setState(() => _error = 'Password must be at least 6 characters');
+      return;
+    }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       await _svc.adminSignup(fullName: name, email: email, password: pass);
@@ -63,20 +75,28 @@ class _AdminSignupScreenState extends State<AdminSignupScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            const Text('Admin Registration', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+            const Text('Admin Registration',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF111827))),
             const SizedBox(height: 4),
-            const Text("You'll receive an OTP on your email to verify.", style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            const Text("You'll receive an OTP on your email to verify.",
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
             const SizedBox(height: 28),
             TextField(
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_outline)),
+              decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  prefixIcon: Icon(Icons.person_outline)),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+              decoration: const InputDecoration(
+                  labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -86,7 +106,9 @@ class _AdminSignupScreenState extends State<AdminSignupScreen> {
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                  icon: Icon(_obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
@@ -94,21 +116,29 @@ class _AdminSignupScreenState extends State<AdminSignupScreen> {
             if (_error != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.red.shade200),
                 ),
-                child: Text(_error!, style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
+                child: Text(_error!,
+                    style: TextStyle(fontSize: 13, color: Colors.red.shade700)),
               ),
             ],
             const SizedBox(height: 28),
             ElevatedButton(
               onPressed: _loading ? null : _submit,
               child: _loading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : const Text('Create Account',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ],
         ),

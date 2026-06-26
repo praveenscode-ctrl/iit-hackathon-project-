@@ -83,7 +83,8 @@ class StudentAnalyticsModel {
         consecutiveMisses: (j['consecutive_misses'] as num).toInt(),
         classAvgCompletion: (j['class_avg_completion'] as num).toDouble(),
         assignmentHistory: (j['assignment_history'] as List)
-            .map((e) => AssignmentHistoryItem.fromJson(e as Map<String, dynamic>))
+            .map((e) =>
+                AssignmentHistoryItem.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
 }
@@ -143,7 +144,8 @@ class ClassAnalyticsModel {
         avgLateRate: (j['avg_late_rate'] as num).toDouble(),
         highRiskCount: (j['high_risk_count'] as num).toInt(),
         bottleneckAssignments: (j['bottleneck_assignments'] as List)
-            .map((e) => BottleneckAssignment.fromJson(e as Map<String, dynamic>))
+            .map(
+                (e) => BottleneckAssignment.fromJson(e as Map<String, dynamic>))
             .toList(),
         riskDistribution: Map<String, int>.from(
           (j['risk_distribution'] as Map).map(
