@@ -7,6 +7,7 @@ class RiskBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (riskLevel) {
+      'CRITICAL' => (Colors.red.shade900, 'Critical'),
       'HIGH' => (Colors.red.shade600, 'High Risk'),
       'MEDIUM' => (Colors.orange.shade600, 'Medium'),
       'LOW' => (Colors.yellow.shade700, 'Low'),

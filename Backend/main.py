@@ -6,6 +6,18 @@ from datetime import datetime
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure check_sa_risk check constraint is updated for CRITICAL risk level in PostgreSQL
+    from database import engine
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            if "postgresql" in engine.dialect.name:
+                conn.execute(text("ALTER TABLE student_analytics DROP CONSTRAINT IF EXISTS check_sa_risk;"))
+                conn.execute(text("ALTER TABLE student_analytics ADD CONSTRAINT check_sa_risk CHECK (risk_level IN ('NORMAL', 'LOW', 'MEDIUM', 'HIGH', 'RECOVERING', 'CRITICAL'));"))
+                conn.commit()
+    except Exception as e:
+        print("Auto check constraint update bypassed:", e)
+
     if not scheduler.running:
         scheduler.start()
     yield

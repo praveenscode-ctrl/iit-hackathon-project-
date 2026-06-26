@@ -23,7 +23,7 @@ class StudentAnalytics(Base):
     last_computed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     __table_args__ = (
-        CheckConstraint("risk_level IN ('NORMAL', 'LOW', 'MEDIUM', 'HIGH', 'RECOVERING')", name='check_sa_risk'),
+        CheckConstraint("risk_level IN ('NORMAL', 'LOW', 'MEDIUM', 'HIGH', 'RECOVERING', 'CRITICAL')", name='check_sa_risk'),
         UniqueConstraint('student_id', 'class_id', name='uq_sa_student_class'),
         Index('idx_sa_student', 'student_id'),
         Index('idx_sa_class', 'class_id'),

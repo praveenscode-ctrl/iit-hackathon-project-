@@ -336,6 +336,7 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
                     "data": [{
                         "avg_completion": float(ca.avg_completion),
                         "avg_miss_rate": float(ca.avg_miss_rate),
+                        "avg_late_rate": float(ca.avg_late_rate),
                         "high_risk_count": ca.high_risk_count,
                         "total_students": ca.total_students
                     }],
@@ -365,8 +366,8 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
             ).order_by(StudentAnalytics.consecutive_misses.desc()).all()
             
             result = {
-                "type": "student_list",
-                "data": [{"full_name": u.full_name, "info": sa.risk_level} for sa, u in risk_rows],
+                "type": "risk_list",
+                "data": [{"full_name": u.full_name, "risk_level": sa.risk_level, "consecutive_misses": sa.consecutive_misses} for sa, u in risk_rows],
                 "message": f"Found {len(risk_rows)} at-risk/recovering students."
             }
         else:
@@ -379,8 +380,8 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
             
             lines = [f"- {u.full_name} ({c_name}): {sa.risk_level}" for sa, u, c_name in risk_rows]
             result = {
-                "type": "student_list",
-                "data": [{"full_name": u.full_name, "info": f"{c_name} - {sa.risk_level}"} for sa, u, c_name in risk_rows],
+                "type": "risk_list",
+                "data": [{"full_name": u.full_name, "risk_level": sa.risk_level, "class_name": c_name, "consecutive_misses": sa.consecutive_misses} for sa, u, c_name in risk_rows],
                 "message": f"Found {len(risk_rows)} at-risk/recovering student(s):\n" + "\n".join(lines)
             }
 
