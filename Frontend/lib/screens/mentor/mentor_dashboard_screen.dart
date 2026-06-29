@@ -7,6 +7,7 @@ import '../../providers/class_provider.dart';
 import '../../providers/analytics_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/notification_tile_widget.dart';
+import '../../services/submission_service.dart';
 
 class MentorDashboardScreen extends ConsumerStatefulWidget {
   const MentorDashboardScreen({super.key});
@@ -137,9 +138,7 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
                         .take(4)
                         .map((n) => NotificationTile(
                               notification: n,
-                              onTap: () => ref
-                                  .read(notificationsProvider.notifier)
-                                  .markRead(n.id),
+                              onTap: () => _handleNotificationTap(n),
                             ))
                         .toList(),
                   ),
@@ -201,6 +200,114 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleNotificationTap(NotificationModel n) async {
+    await ref.read(notificationsProvider.notifier).markRead(n.id);
+
+    if (n.notificationType == 'EXTENSION_REQUESTED') {
+      final payload = n.payload;
+      if (payload == null) return;
+      final requestId = payload['request_id'] as String?;
+      if (requestId == null) return;
+
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) {
+          bool processing = false;
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                title: const Text('Late Submission Request'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(n.body),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Would you like to accept this request or keep the student on wait?',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+                actions: [
+                  if (processing)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: CircularProgressIndicator(),
+                    )
+                  else ...[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                      onPressed: () async {
+                        setDialogState(() => processing = true);
+                        try {
+                          final subSvc = SubmissionService();
+                          await subSvc.rejectExtension(requestId);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Request put on wait.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $e')),
+                            );
+                          }
+                        } finally {
+                          setDialogState(() => processing = false);
+                        }
+                      },
+                      child: const Text('Wait'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white),
+                      onPressed: () async {
+                        setDialogState(() => processing = true);
+                        try {
+                          final subSvc = SubmissionService();
+                          await subSvc.approveExtension(requestId);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Request approved!')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $e')),
+                            );
+                          }
+                        } finally {
+                          setDialogState(() => processing = false);
+                        }
+                      },
+                      child: const Text('Accept'),
+                    ),
+                  ]
+                ],
+              );
+            },
+          );
+        },
+      );
+    } else {
+      final assignmentId = n.payload?['assignment_id'] as String?;
+      if (assignmentId != null) {
+        context.push('/mentor/assignments/$assignmentId');
+      }
+    }
   }
 
   void _showNotificationsInbox() {
@@ -267,11 +374,7 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
                                 final n = list[index];
                                 return NotificationTile(
                                   notification: n,
-                                  onTap: () {
-                                    ref
-                                        .read(notificationsProvider.notifier)
-                                        .markRead(n.id);
-                                  },
+                                  onTap: () => _handleNotificationTap(n),
                                 );
                               },
                             ),
