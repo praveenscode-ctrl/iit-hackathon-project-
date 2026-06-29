@@ -39,6 +39,8 @@ class AssignmentModel {
   final String createdByName;
   final DateTime createdAt;
   final StudentSubmissionInfo? studentSubmission;
+  final String? extensionStatus;
+  final String? extensionReason;
 
   AssignmentModel({
     required this.id,
@@ -54,6 +56,8 @@ class AssignmentModel {
     required this.createdByName,
     required this.createdAt,
     this.studentSubmission,
+    this.extensionStatus,
+    this.extensionReason,
   });
 
   factory AssignmentModel.fromJson(Map<String, dynamic> j) => AssignmentModel(
@@ -77,5 +81,7 @@ class AssignmentModel {
             ? StudentSubmissionInfo.fromJson(
                 j['student_submission'] as Map<String, dynamic>)
             : null,
+        extensionStatus: j['extension_status'] as String?,
+        extensionReason: j['extension_reason'] as String?,
       );
 }

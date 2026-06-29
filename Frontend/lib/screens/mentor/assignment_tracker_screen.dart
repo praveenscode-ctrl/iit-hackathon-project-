@@ -10,6 +10,7 @@ import '../../core/ws_client.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 import '../../widgets/tracker_card_widget.dart';
+import '../../services/submission_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AssignmentTrackerScreen extends ConsumerStatefulWidget {
@@ -26,8 +27,11 @@ class _AssignmentTrackerScreenState
   final _exportSvc = ExportService();
   final _storageSvc = StorageService();
   final _wsClient = WsClient();
+  final _subSvc = SubmissionService();
   bool _exporting = false;
   bool _publishing = false;
+  List<Map<String, dynamic>> _extensionRequests = [];
+  bool _loadingRequests = false;
 
   Future<void> _publishAssignment(String classId) async {
     setState(() => _publishing = true);
@@ -52,12 +56,63 @@ class _AssignmentTrackerScreenState
     }
   }
 
+  Future<void> _loadRequests() async {
+    setState(() => _loadingRequests = true);
+    try {
+      final reqs = await _subSvc.getExtensionRequests(widget.assignmentId);
+      if (mounted) {
+        setState(() {
+          _extensionRequests = reqs;
+        });
+      }
+    } catch (_) {
+      // ignore
+    } finally {
+      if (mounted) setState(() => _loadingRequests = false);
+    }
+  }
+
+  Future<void> _approveRequest(String requestId) async {
+    try {
+      await _subSvc.approveExtension(requestId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Extension request approved successfully!')));
+      }
+      _loadRequests();
+      ref.invalidate(trackerProvider(widget.assignmentId));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to approve extension: $e')));
+      }
+    }
+  }
+
+  Future<void> _rejectRequest(String requestId) async {
+    try {
+      await _subSvc.rejectExtension(requestId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Extension request put on wait / rejected!')));
+      }
+      _loadRequests();
+      ref.invalidate(trackerProvider(widget.assignmentId));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to reject extension: $e')));
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     // listen to WebSocket 'tracker_refresh' to auto-reload
     _wsClient.onTrackerRefresh = _onWsRefresh;
     _wsClient.connect(widget.assignmentId);
+    _loadRequests();
   }
 
   @override
@@ -135,6 +190,7 @@ class _AssignmentTrackerScreenState
         onRefresh: () async {
           ref.invalidate(assignmentDetailProvider(widget.assignmentId));
           ref.invalidate(trackerProvider(widget.assignmentId));
+          await _loadRequests();
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -233,6 +289,105 @@ class _AssignmentTrackerScreenState
                 ),
               ),
             ),
+
+            if (_extensionRequests.any((r) => r['status'] == 'PENDING')) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Pending Extension Requests',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ..._extensionRequests.where((r) => r['status'] == 'PENDING').map((req) {
+                final studentName = req['student_name'] as String? ?? 'Student';
+                final regId = req['registration_id'] as String? ?? '';
+                final reason = req['reason'] as String? ?? '';
+                final reqId = req['id'] as String;
+                return Card(
+                  color: Colors.orange.shade50,
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: Colors.orange.shade200),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.orange.shade100,
+                              radius: 18,
+                              child: Text(
+                                studentName.isNotEmpty ? studentName[0].toUpperCase() : '?',
+                                style: TextStyle(
+                                    color: Colors.orange.shade800,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    studentName,
+                                    style: const TextStyle(
+                                        fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                  if (regId.isNotEmpty)
+                                    Text(
+                                      regId,
+                                      style: TextStyle(
+                                          fontSize: 11, color: Colors.grey.shade600),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Reason: "$reason"',
+                          style: const TextStyle(
+                              fontSize: 13, fontStyle: FontStyle.italic),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                              onPressed: () => _approveRequest(reqId),
+                              icon: const Icon(Icons.check, size: 16),
+                              label: const Text('Accept'),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                              onPressed: () => _rejectRequest(reqId),
+                              icon: const Icon(Icons.close, size: 16),
+                              label: const Text('Wait'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
 
             const SizedBox(height: 16),
 

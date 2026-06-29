@@ -167,6 +167,32 @@ class _StudentAssignmentDetailScreenState
     }
   }
 
+  Future<void> _requestExtension() async {
+    final reason = _reasonCtrl.text.trim();
+    if (reason.isEmpty) {
+      setState(() => _error = 'Please enter a reason for your extension request');
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await _subSvc.requestExtension(widget.assignmentId, reason: reason);
+      ref.invalidate(assignmentDetailProvider(widget.assignmentId));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Extension request submitted successfully!')));
+      }
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Failed to submit request');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   Future<void> _setReminder() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -355,51 +381,128 @@ class _StudentAssignmentDetailScreenState
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
-                          if (type == 'TEXT' || type == 'BOTH') ...[
-                            TextField(
-                              controller: _textCtrl,
-                              maxLines: 5,
-                              decoration: const InputDecoration(
-                                  labelText: 'Text Answer',
-                                  alignLabelWithHint: true),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (type == 'FILE' || type == 'BOTH') ...[
-                            const Text('File Upload',
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF374151))),
-                            const SizedBox(height: 8),
-                            OutlinedButton.icon(
-                              onPressed: _fileUploading
-                                  ? null
-                                  : _pickAndUploadSubmission,
-                              icon: _fileUploading
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2))
-                                  : const Icon(Icons.upload_file),
-                              label: Text(_fileUploading
-                                  ? 'Uploading...'
-                                  : _fileName ?? 'Select File'),
-                            ),
-                            if (_uploadedFileUrl != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text('✓ Uploaded: $_fileName',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.green.shade700)),
+                          if (isLate && a.extensionStatus == 'APPROVED') ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.green.shade200)),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle, color: Colors.green.shade700),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Extension approved: "${a.extensionReason ?? ""}"\nYou can now submit.',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.green.shade700,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            const SizedBox(height: 16),
+                            ),
                           ],
-                          if (isLate) ...[
+                          if (isLate && a.extensionStatus == 'PENDING') ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange.shade200)),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.hourglass_empty, color: Colors.orange.shade700),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Your late submission request is pending mentor approval.\nReason: "${a.extensionReason ?? ""}"',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.orange.shade800,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (isLate && a.extensionStatus == 'REJECTED') ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.shade200)),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.cancel, color: Colors.red.shade700),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Your late submission request was rejected.\nReason: "${a.extensionReason ?? ""}"',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.red.shade800,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (!isLate || a.extensionStatus == 'APPROVED') ...[
+                            if (type == 'TEXT' || type == 'BOTH') ...[
+                              TextField(
+                                controller: _textCtrl,
+                                maxLines: 5,
+                                decoration: const InputDecoration(
+                                    labelText: 'Text Answer',
+                                    alignLabelWithHint: true),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            if (type == 'FILE' || type == 'BOTH') ...[
+                              const Text('File Upload',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF374151))),
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: _fileUploading
+                                    ? null
+                                    : _pickAndUploadSubmission,
+                                icon: _fileUploading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.upload_file),
+                                label: Text(_fileUploading
+                                    ? 'Uploading...'
+                                    : _fileName ?? 'Select File'),
+                              ),
+                              if (_uploadedFileUrl != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text('✓ Uploaded: $_fileName',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green.shade700)),
+                                ),
+                              const SizedBox(height: 16),
+                            ],
+                          ],
+                          if (isLate && a.extensionStatus == null) ...[
                             const Text(
-                              'This assignment is past its deadline or closed. A reason is required to submit.',
+                              'This assignment is past its deadline or closed. You must request approval from your mentor before submitting.',
                               style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.red,
@@ -410,7 +513,7 @@ class _StudentAssignmentDetailScreenState
                               controller: _reasonCtrl,
                               maxLines: 2,
                               decoration: const InputDecoration(
-                                  labelText: 'Reason for late submission *',
+                                  labelText: 'Reason for extension request *',
                                   alignLabelWithHint: true),
                             ),
                             const SizedBox(height: 16),
@@ -430,24 +533,43 @@ class _StudentAssignmentDetailScreenState
                                       color: Colors.red.shade700)),
                             ),
                           ],
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: (_submitting || _fileUploading)
-                                  ? null
-                                  : () => _submit(type, isLate),
-                              child: _submitting
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: Colors.white))
-                                  : const Text('Submit Assignment',
-                                      style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600)),
+                          if (!isLate || a.extensionStatus == 'APPROVED') ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: (_submitting || _fileUploading)
+                                    ? null
+                                    : () => _submit(type, isLate),
+                                child: _submitting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2, color: Colors.white))
+                                    : const Text('Submit Assignment',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600)),
+                              ),
                             ),
-                          ),
+                          ] else if (isLate && a.extensionStatus == null) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _submitting ? null : _requestExtension,
+                                child: _submitting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2, color: Colors.white))
+                                    : const Text('Request Extension',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

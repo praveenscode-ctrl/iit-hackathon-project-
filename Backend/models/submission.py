@@ -27,3 +27,19 @@ class Submission(Base):
         Index('idx_submissions_student', 'student_id'),
         Index('idx_submissions_current', 'is_current'),
     )
+
+class ExtensionRequest(Base):
+    __tablename__ = 'extension_requests'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assignment_id = Column(UUID(as_uuid=True), ForeignKey('assignments.id', ondelete='CASCADE'), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    reason = Column(Text, nullable=False)
+    status = Column(String(10), server_default='PENDING', nullable=False) # PENDING, APPROVED, REJECTED
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    __table_args__ = (
+        CheckConstraint("status IN ('PENDING', 'APPROVED', 'REJECTED')", name='check_extension_status'),
+        UniqueConstraint('assignment_id', 'student_id', name='uq_extension_request'),
+    )

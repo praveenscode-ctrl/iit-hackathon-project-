@@ -33,6 +33,28 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
       appBar: AppBar(
         title: const Text('Mentor Dashboard'),
         actions: [
+          Consumer(
+            builder: (context, ref, _) {
+              final list = ref.watch(notificationsProvider).valueOrNull ?? [];
+              final unread = list.where((n) => !n.isRead).length;
+              return Stack(
+                children: [
+                  IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: _showNotificationsInbox),
+                  if (unread > 0)
+                    Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                                color: Colors.red, shape: BoxShape.circle))),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -178,6 +200,89 @@ class _MentorDashboardScreenState extends ConsumerState<MentorDashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showNotificationsInbox() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final notifsVal = ref.watch(notificationsProvider);
+            return notifsVal.when(
+              loading: () => const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (err, _) => SizedBox(
+                height: 200,
+                child: Center(child: Text('Error: $err')),
+              ),
+              data: (list) {
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Notifications Inbox',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (list.any((n) => !n.isRead))
+                            TextButton(
+                              onPressed: () async {
+                                final notifier = ref.read(notificationsProvider.notifier);
+                                for (final n in list) {
+                                  if (!n.isRead) {
+                                    await notifier.markRead(n.id);
+                                  }
+                                }
+                              },
+                              child: const Text('Mark all read'),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: list.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No notifications',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: list.length,
+                              itemBuilder: (context, index) {
+                                final n = list[index];
+                                return NotificationTile(
+                                  notification: n,
+                                  onTap: () {
+                                    ref
+                                        .read(notificationsProvider.notifier)
+                                        .markRead(n.id);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

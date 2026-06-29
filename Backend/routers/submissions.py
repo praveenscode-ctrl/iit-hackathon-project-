@@ -9,7 +9,7 @@ from models.class_ import ClassMembership
 from models.submission import Submission
 from models.analytics import AssignmentAnalytics
 from models.notification import Notification
-from schemas.assignment import SubmitRequest
+from schemas.assignment import SubmitRequest, ExtensionRequestCreate
 from utils.dependencies import require_role, verify_admin_class_access, verify_mentor_class_access
 from services import analytics_service
 from websocket.tracker_ws import manager
@@ -38,10 +38,22 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
     if a.deadline_at and a.deadline_at < now:
         is_late = True
         
+    resolved_reason = req.late_reason
     if a.status == 'CLOSED' or is_late:
         is_late = True
-        if not req.late_reason or not req.late_reason.strip():
-            raise HTTPException(status_code=400, detail="Assignment deadline has passed or it is closed. You must provide a reason for late submission.")
+        # Verify student has an APPROVED extension request
+        from models.submission import ExtensionRequest
+        ext_req = db.query(ExtensionRequest).filter_by(
+            assignment_id=a.id,
+            student_id=u.id,
+            status='APPROVED'
+        ).first()
+        if not ext_req:
+            raise HTTPException(
+                status_code=403,
+                detail="Assignment deadline has passed or it is closed. You must request and receive approval from your mentor before submitting."
+            )
+        resolved_reason = ext_req.reason
         
     ext = db.query(Submission).filter_by(assignment_id=a.id, student_id=u.id, is_current=True).first()
     new_version = 1
@@ -56,7 +68,7 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
         file_url=req.file_url,
         text_answer=req.text_answer,
         is_late=is_late,
-        late_reason=req.late_reason if is_late else None,
+        late_reason=resolved_reason,
         version=new_version,
         is_current=True,
         submitted_at=now
@@ -180,3 +192,147 @@ def get_submissions(assignment_id: str, db: Session = Depends(get_db), u: User =
             "version": r.version
         })
     return {"submissions": submissions_list}
+
+@router.post("/assignments/{assignment_id}/extension-request", status_code=201)
+def request_extension(
+    assignment_id: str,
+    req: ExtensionRequestCreate,
+    db: Session = Depends(get_db),
+    u: User = Depends(require_role(["STUDENT"]))
+):
+    from models.submission import ExtensionRequest
+    a = db.query(Assignment).filter_by(id=assignment_id).first()
+    if not a: raise HTTPException(404, "Assignment not found")
+    
+    # Check if they are in the class
+    m = db.query(ClassMembership).filter_by(class_id=a.class_id, user_id=u.id, status='ACTIVE').first()
+    if not m: raise HTTPException(403, "Not an active student in this class")
+    
+    # Check if there is already a request
+    existing = db.query(ExtensionRequest).filter_by(assignment_id=a.id, student_id=u.id).first()
+    if existing:
+        raise HTTPException(400, "You have already requested an extension for this assignment")
+        
+    er = ExtensionRequest(
+        assignment_id=a.id,
+        student_id=u.id,
+        reason=req.reason,
+        status='PENDING'
+    )
+    db.add(er)
+    db.commit()
+    db.refresh(er)
+    
+    # Notify mentors
+    mentors = db.query(User).join(ClassMembership).filter(
+        ClassMembership.class_id == a.class_id,
+        ClassMembership.member_role == 'MENTOR',
+        ClassMembership.status == 'ACTIVE'
+    ).all()
+    for mentor in mentors:
+        db.add(Notification(
+            user_id=mentor.id,
+            notification_type='EXTENSION_REQUESTED',
+            title='Late Submission Request',
+            body=f"Student {u.full_name} requested a late submission for '{a.title}' due to: {req.reason}",
+            payload={"assignment_id": str(a.id), "student_id": str(u.id), "request_id": str(er.id)}
+        ))
+    db.commit()
+    
+    return {"id": str(er.id), "status": er.status}
+
+@router.get("/assignments/{assignment_id}/extension-requests")
+def get_extension_requests(
+    assignment_id: str,
+    db: Session = Depends(get_db),
+    u: User = Depends(require_role(["ADMIN", "MENTOR"]))
+):
+    from models.submission import ExtensionRequest
+    a = db.query(Assignment).filter_by(id=assignment_id).first()
+    if not a: raise HTTPException(404, "Assignment not found")
+    
+    if u.role == "MENTOR":
+        verify_mentor_class_access(a.class_id, u, db)
+    elif u.role == "ADMIN":
+        verify_admin_class_access(a.class_id, u, db)
+        
+    reqs = db.query(ExtensionRequest, User.full_name, User.registration_id).join(
+        User, ExtensionRequest.student_id == User.id
+    ).filter(ExtensionRequest.assignment_id == a.id).all()
+    
+    return {
+        "requests": [
+            {
+                "id": str(r[0].id),
+                "student_id": str(r[0].student_id),
+                "student_name": r[1],
+                "registration_id": r[2],
+                "reason": r[0].reason,
+                "status": r[0].status,
+                "created_at": r[0].created_at
+            }
+            for r in reqs
+        ]
+    }
+
+@router.post("/extension-requests/{request_id}/approve")
+def approve_extension(
+    request_id: str,
+    db: Session = Depends(get_db),
+    u: User = Depends(require_role(["ADMIN", "MENTOR"]))
+):
+    from models.submission import ExtensionRequest
+    er = db.query(ExtensionRequest).filter_by(id=request_id).first()
+    if not er: raise HTTPException(404, "Request not found")
+    
+    a = db.query(Assignment).filter_by(id=er.assignment_id).first()
+    if u.role == "MENTOR":
+        verify_mentor_class_access(a.class_id, u, db)
+    elif u.role == "ADMIN":
+        verify_admin_class_access(a.class_id, u, db)
+        
+    er.status = 'APPROVED'
+    db.commit()
+    
+    # Notify student
+    db.add(Notification(
+        user_id=er.student_id,
+        notification_type='EXTENSION_APPROVED',
+        title='Late Submission Request Approved',
+        body=f"Your request to submit '{a.title}' late has been APPROVED by your mentor. You can now submit your assignment.",
+        payload={"assignment_id": str(a.id)}
+    ))
+    db.commit()
+    
+    return {"id": str(er.id), "status": er.status}
+
+@router.post("/extension-requests/{request_id}/reject")
+def reject_extension(
+    request_id: str,
+    db: Session = Depends(get_db),
+    u: User = Depends(require_role(["ADMIN", "MENTOR"]))
+):
+    from models.submission import ExtensionRequest
+    er = db.query(ExtensionRequest).filter_by(id=request_id).first()
+    if not er: raise HTTPException(404, "Request not found")
+    
+    a = db.query(Assignment).filter_by(id=er.assignment_id).first()
+    if u.role == "MENTOR":
+        verify_mentor_class_access(a.class_id, u, db)
+    elif u.role == "ADMIN":
+        verify_admin_class_access(a.class_id, u, db)
+        
+    er.status = 'REJECTED'
+    db.commit()
+    
+    # Notify student
+    db.add(Notification(
+        user_id=er.student_id,
+        notification_type='EXTENSION_REJECTED',
+        title='Late Submission Request Rejected',
+        body=f"Your request to submit '{a.title}' late was rejected/put on wait.",
+        payload={"assignment_id": str(a.id)}
+    ))
+    db.commit()
+    
+    return {"id": str(er.id), "status": er.status}

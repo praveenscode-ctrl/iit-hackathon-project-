@@ -74,8 +74,11 @@ def get_assignments(class_id: str, db: Session = Depends(get_db), u: User = Depe
         d["created_by_name"] = creator
         
         if u.role == "STUDENT":
-            from models.submission import Submission
+            from models.submission import Submission, ExtensionRequest
             s = db.query(Submission).filter_by(assignment_id=a.id, student_id=u.id, is_current=True).first()
+            er = db.query(ExtensionRequest).filter_by(assignment_id=a.id, student_id=u.id).first()
+            d["extension_status"] = er.status if er else None
+            d["extension_reason"] = er.reason if er else None
             if s:
                 d["student_submission"] = {
                     "submitted": True,
@@ -88,6 +91,8 @@ def get_assignments(class_id: str, db: Session = Depends(get_db), u: User = Depe
                 d["student_submission"] = None
         else:
             d["student_submission"] = None
+            d["extension_status"] = None
+            d["extension_reason"] = None
 
         res.append(d)
 
@@ -105,9 +110,14 @@ def get_assignment(assignment_id: str, db: Session = Depends(get_db), u: User = 
         if not m: raise HTTPException(403, "Not an active student")
 
     sub_info = {"submitted": False, "submission_id": None, "submitted_at": None, "is_late": False, "version": 0}
+    ext_status = None
+    ext_reason = None
     if u.role == "STUDENT":
-        from models.submission import Submission
+        from models.submission import Submission, ExtensionRequest
         s = db.query(Submission).filter_by(assignment_id=a.id, student_id=u.id, is_current=True).first()
+        er = db.query(ExtensionRequest).filter_by(assignment_id=a.id, student_id=u.id).first()
+        ext_status = er.status if er else None
+        ext_reason = er.reason if er else None
         if s:
             sub_info = {"submitted": True, "submission_id": str(s.id), "submitted_at": s.submitted_at, "is_late": s.is_late, "version": s.version}
 
@@ -117,6 +127,8 @@ def get_assignment(assignment_id: str, db: Session = Depends(get_db), u: User = 
     d["created_by"] = str(d["created_by"])
     d["created_by_name"] = creator
     d["student_submission"] = sub_info
+    d["extension_status"] = ext_status
+    d["extension_reason"] = ext_reason
     return d
 
 @router.post("/{assignment_id}/publish")

@@ -28,3 +28,6 @@ class PresignedDownloadRequest(BaseModel):
 class ReminderRequest(BaseModel):
     assignment_id: str
     remind_at: str
+
+class ExtensionRequestCreate(BaseModel):
+    reason: str

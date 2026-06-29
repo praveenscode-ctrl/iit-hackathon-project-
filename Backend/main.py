@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
                 
                 # Update check_notif_type check constraint
                 conn.execute(text("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS check_notif_type;"))
-                conn.execute(text("ALTER TABLE notifications ADD CONSTRAINT check_notif_type CHECK (notification_type IN ('STUDENT_APPROVED', 'STUDENT_REJECTED', 'ASSIGNMENT_PUBLISHED', 'DEADLINE_REMINDER', 'SUBMISSION_RECEIPT', 'MISSED_DEADLINE', 'RISK_ALERT', 'CO_MENTOR_ADDED', 'CLASS_ARCHIVED', 'LATE_SUBMISSION_REASON'));"))
+                conn.execute(text("ALTER TABLE notifications ADD CONSTRAINT check_notif_type CHECK (notification_type IN ('STUDENT_APPROVED', 'STUDENT_REJECTED', 'ASSIGNMENT_PUBLISHED', 'DEADLINE_REMINDER', 'SUBMISSION_RECEIPT', 'MISSED_DEADLINE', 'RISK_ALERT', 'CO_MENTOR_ADDED', 'CLASS_ARCHIVED', 'LATE_SUBMISSION_REASON', 'EXTENSION_REQUESTED', 'EXTENSION_APPROVED', 'EXTENSION_REJECTED'));"))
                 
                 # Check and add late_reason column to submissions
                 col_check = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='submissions' AND column_name='late_reason';")).first()

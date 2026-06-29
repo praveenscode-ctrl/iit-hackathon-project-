@@ -25,4 +25,27 @@ class SubmissionService {
         .map((e) => SubmissionModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  Future<Map<String, dynamic>> requestExtension(
+    String assignmentId, {
+    required String reason,
+  }) async {
+    final data = await apiPost('/assignments/$assignmentId/extension-request', data: {
+      'reason': reason,
+    });
+    return data as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> getExtensionRequests(String assignmentId) async {
+    final data = await apiGet('/assignments/$assignmentId/extension-requests');
+    return List<Map<String, dynamic>>.from(data['requests'] as List);
+  }
+
+  Future<void> approveExtension(String requestId) async {
+    await apiPost('/extension-requests/$requestId/approve');
+  }
+
+  Future<void> rejectExtension(String requestId) async {
+    await apiPost('/extension-requests/$requestId/reject');
+  }
 }
