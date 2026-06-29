@@ -241,6 +241,7 @@ class _StudentAssignmentDetailScreenState
               : 'No deadline';
           final info = a.studentSubmission;
           final alreadySubmitted = info != null && info.submitted == true;
+          final isLate = a.status == 'CLOSED' || (a.deadlineAt != null && a.deadlineAt!.isBefore(DateTime.now()));
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -396,7 +397,6 @@ class _StudentAssignmentDetailScreenState
                               ),
                             const SizedBox(height: 16),
                           ],
-                          final isLate = a.status == 'CLOSED' || (a.deadlineAt != null && a.deadlineAt!.isBefore(DateTime.now()));
                           if (isLate) ...[
                             const Text(
                               'This assignment is past its deadline or closed. A reason is required to submit.',
