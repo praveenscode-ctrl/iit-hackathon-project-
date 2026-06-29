@@ -29,6 +29,7 @@ class _StudentAssignmentDetailScreenState
   final _storageSvc = StorageService();
   final _notifSvc = NotificationService();
   final _textCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
 
   bool _submitting = false;
   String? _error;
@@ -43,6 +44,7 @@ class _StudentAssignmentDetailScreenState
   @override
   void dispose() {
     _textCtrl.dispose();
+    _reasonCtrl.dispose();
     super.dispose();
   }
 
@@ -112,7 +114,7 @@ class _StudentAssignmentDetailScreenState
     }
   }
 
-  Future<void> _submit(String type) async {
+  Future<void> _submit(String type, bool isLate) async {
     final text = _textCtrl.text.trim();
 
     if (type == 'TEXT' && text.isEmpty) {
@@ -125,6 +127,12 @@ class _StudentAssignmentDetailScreenState
     }
     if (type == 'BOTH' && text.isEmpty && _uploadedFileUrl == null) {
       setState(() => _error = 'Please enter your answer or upload a file');
+      return;
+    }
+
+    final reason = _reasonCtrl.text.trim();
+    if (isLate && reason.isEmpty) {
+      setState(() => _error = 'Please enter a reason for late submission');
       return;
     }
 
@@ -141,6 +149,7 @@ class _StudentAssignmentDetailScreenState
         submissionType: submitType,
         textAnswer: text.isEmpty ? null : text,
         fileUrl: _uploadedFileUrl,
+        lateReason: isLate ? reason : null,
       );
       ref.invalidate(assignmentDetailProvider(widget.assignmentId));
       ref.invalidate(mySubmissionsProvider);
@@ -387,6 +396,25 @@ class _StudentAssignmentDetailScreenState
                               ),
                             const SizedBox(height: 16),
                           ],
+                          final isLate = a.status == 'CLOSED' || (a.deadlineAt != null && a.deadlineAt!.isBefore(DateTime.now()));
+                          if (isLate) ...[
+                            const Text(
+                              'This assignment is past its deadline or closed. A reason is required to submit.',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _reasonCtrl,
+                              maxLines: 2,
+                              decoration: const InputDecoration(
+                                  labelText: 'Reason for late submission *',
+                                  alignLabelWithHint: true),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           if (_error != null) ...[
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -407,7 +435,7 @@ class _StudentAssignmentDetailScreenState
                             child: ElevatedButton(
                               onPressed: (_submitting || _fileUploading)
                                   ? null
-                                  : () => _submit(type),
+                                  : () => _submit(type, isLate),
                               child: _submitting
                                   ? const SizedBox(
                                       height: 20,

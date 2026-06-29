@@ -7,11 +7,13 @@ class SubmissionService {
     required String submissionType,
     String? fileUrl,
     String? textAnswer,
+    String? lateReason,
   }) async {
     final data = await apiPost('/assignments/$assignmentId/submit', data: {
       'submission_type': submissionType,
       'file_url': fileUrl,
       'text_answer': textAnswer,
+      'late_reason': lateReason,
     });
     return data as Map<String, dynamic>;
   }

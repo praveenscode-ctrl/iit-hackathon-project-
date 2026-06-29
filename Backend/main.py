@@ -11,16 +11,32 @@ async def lifespan(app: FastAPI):
     from models import user, submission, notification, export, class_, bulk_import, assignment, analytics
     Base.metadata.create_all(bind=engine)
 
-    # Ensure check_sa_risk check constraint is updated for CRITICAL risk level in PostgreSQL
+    # Ensure constraints and columns are updated in PostgreSQL / SQLite
     from sqlalchemy import text
     try:
         with engine.connect() as conn:
             if "postgresql" in engine.dialect.name:
                 conn.execute(text("ALTER TABLE student_analytics DROP CONSTRAINT IF EXISTS check_sa_risk;"))
                 conn.execute(text("ALTER TABLE student_analytics ADD CONSTRAINT check_sa_risk CHECK (risk_level IN ('NORMAL', 'LOW', 'MEDIUM', 'HIGH', 'RECOVERING', 'CRITICAL'));"))
+                
+                # Update check_notif_type check constraint
+                conn.execute(text("ALTER TABLE notifications DROP CONSTRAINT IF EXISTS check_notif_type;"))
+                conn.execute(text("ALTER TABLE notifications ADD CONSTRAINT check_notif_type CHECK (notification_type IN ('STUDENT_APPROVED', 'STUDENT_REJECTED', 'ASSIGNMENT_PUBLISHED', 'DEADLINE_REMINDER', 'SUBMISSION_RECEIPT', 'MISSED_DEADLINE', 'RISK_ALERT', 'CO_MENTOR_ADDED', 'CLASS_ARCHIVED', 'LATE_SUBMISSION_REASON'));"))
+                
+                # Check and add late_reason column to submissions
+                col_check = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='submissions' AND column_name='late_reason';")).first()
+                if not col_check:
+                    conn.execute(text("ALTER TABLE submissions ADD COLUMN late_reason TEXT;"))
                 conn.commit()
+            else:
+                # SQLite
+                try:
+                    conn.execute(text("ALTER TABLE submissions ADD COLUMN late_reason TEXT;"))
+                    conn.commit()
+                except Exception:
+                    pass
     except Exception as e:
-        print("Auto check constraint update bypassed:", e)
+        print("Auto database updates bypassed:", e)
 
     if not scheduler.running:
         scheduler.start()

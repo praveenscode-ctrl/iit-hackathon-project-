@@ -14,6 +14,7 @@ class Submission(Base):
     file_url = Column(Text, nullable=True)
     text_answer = Column(Text, nullable=True)
     is_late = Column(Boolean, server_default='false', nullable=False)
+    late_reason = Column(Text, nullable=True)
     version = Column(Integer, server_default='1', nullable=False)
     is_current = Column(Boolean, server_default='true', nullable=False)
     submitted_at = Column(DateTime(timezone=True), nullable=False)

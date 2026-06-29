@@ -10,3 +10,4 @@ class AiQueryResponse(BaseModel):
     query_text: str
     result: Dict[str, Any]
     action_links: List[Dict[str, str]]
+    needs_clarification: bool = False

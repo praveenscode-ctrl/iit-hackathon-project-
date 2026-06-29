@@ -15,6 +15,7 @@ class SubmitRequest(BaseModel):
     submission_type: str
     file_url: str | None = None
     text_answer: str | None = None
+    late_reason: str | None = None
 
 class PresignedUploadRequest(BaseModel):
     file_name: str

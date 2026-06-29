@@ -21,7 +21,7 @@ router = APIRouter()
 async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session = Depends(get_db), u: User = Depends(require_role(["STUDENT"]))):
     a = db.query(Assignment).filter_by(id=assignment_id).first()
     if not a: raise HTTPException(404, "Not found")
-    if a.status != 'PUBLISHED': raise HTTPException(400, "Assignment is not open for submission")
+    if a.status == 'DRAFT': raise HTTPException(400, "Assignment is not open for submission")
     
     m = db.query(ClassMembership).filter_by(class_id=a.class_id, user_id=u.id, status='ACTIVE').first()
     if not m: raise HTTPException(403, "Not an active student in this class")
@@ -38,6 +38,11 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
     if a.deadline_at and a.deadline_at < now:
         is_late = True
         
+    if a.status == 'CLOSED' or is_late:
+        is_late = True
+        if not req.late_reason or not req.late_reason.strip():
+            raise HTTPException(status_code=400, detail="Assignment deadline has passed or it is closed. You must provide a reason for late submission.")
+        
     ext = db.query(Submission).filter_by(assignment_id=a.id, student_id=u.id, is_current=True).first()
     new_version = 1
     if ext:
@@ -51,6 +56,7 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
         file_url=req.file_url,
         text_answer=req.text_answer,
         is_late=is_late,
+        late_reason=req.late_reason if is_late else None,
         version=new_version,
         is_current=True,
         submitted_at=now
@@ -78,6 +84,22 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
         body=f"Assignment {a.title} submitted at {s.submitted_at.strftime('%I:%M %p on %d %b %Y')}",
         payload={"assignment_id": str(a.id)}
     ))
+    
+    if is_late and req.late_reason:
+        mentors = db.query(User).join(ClassMembership).filter(
+            ClassMembership.class_id == a.class_id,
+            ClassMembership.member_role == 'MENTOR',
+            ClassMembership.status == 'ACTIVE'
+        ).all()
+        for mentor in mentors:
+            db.add(Notification(
+                user_id=mentor.id,
+                notification_type='LATE_SUBMISSION_REASON',
+                title='Late Submission Reason',
+                body=f"Student {u.full_name} submitted late for '{a.title}' due to: {req.late_reason}",
+                payload={"assignment_id": str(a.id), "student_id": str(u.id), "late_reason": req.late_reason}
+            ))
+            
     db.commit()
     
     try:
@@ -112,7 +134,7 @@ async def submit_assignment(assignment_id: str, req: SubmitRequest, db: Session 
 def get_my_submissions(db: Session = Depends(get_db), u: User = Depends(require_role(["STUDENT"]))):
     res = db.execute(text("""
         SELECT s.id as submission_id, s.assignment_id, a.title as assignment_title,
-               s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version
+               s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version, s.late_reason
         FROM submissions s
         JOIN assignments a ON a.id = s.assignment_id
         WHERE s.student_id = :user_id AND s.is_current = true
@@ -133,7 +155,7 @@ def get_submissions(assignment_id: str, db: Session = Depends(get_db), u: User =
         
     res = db.execute(text("""
         SELECT s.id, s.student_id, u.full_name, u.registration_id,
-               s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version
+               s.submission_type, s.file_url, s.text_answer, s.submitted_at, s.is_late, s.version, s.late_reason
         FROM submissions s
         JOIN users u ON u.id = s.student_id
         WHERE s.assignment_id = :assignment_id AND s.is_current = true
@@ -154,6 +176,7 @@ def get_submissions(assignment_id: str, db: Session = Depends(get_db), u: User =
             "text_answer": r.text_answer,
             "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
             "is_late": r.is_late,
+            "late_reason": r.late_reason,
             "version": r.version
         })
     return {"submissions": submissions_list}

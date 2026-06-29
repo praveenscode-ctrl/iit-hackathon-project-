@@ -17,7 +17,7 @@ class Notification(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     __table_args__ = (
-        CheckConstraint("notification_type IN ('STUDENT_APPROVED', 'STUDENT_REJECTED', 'ASSIGNMENT_PUBLISHED', 'DEADLINE_REMINDER', 'SUBMISSION_RECEIPT', 'MISSED_DEADLINE', 'RISK_ALERT', 'CO_MENTOR_ADDED', 'CLASS_ARCHIVED')", name='check_notif_type'),
+        CheckConstraint("notification_type IN ('STUDENT_APPROVED', 'STUDENT_REJECTED', 'ASSIGNMENT_PUBLISHED', 'DEADLINE_REMINDER', 'SUBMISSION_RECEIPT', 'MISSED_DEADLINE', 'RISK_ALERT', 'CO_MENTOR_ADDED', 'CLASS_ARCHIVED', 'LATE_SUBMISSION_REASON')", name='check_notif_type'),
         Index('idx_notif_user', 'user_id'),
         Index('idx_notif_read', 'is_read'),
     )

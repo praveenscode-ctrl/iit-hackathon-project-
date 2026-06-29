@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/assignment_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/storage_service.dart';
+import '../../services/assignment_service.dart';
 import '../../core/ws_client.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
@@ -26,6 +27,30 @@ class _AssignmentTrackerScreenState
   final _storageSvc = StorageService();
   final _wsClient = WsClient();
   bool _exporting = false;
+  bool _publishing = false;
+
+  Future<void> _publishAssignment(String classId) async {
+    setState(() => _publishing = true);
+    try {
+      final assignmentSvc = AssignmentService();
+      await assignmentSvc.publish(widget.assignmentId);
+      
+      ref.invalidate(assignmentDetailProvider(widget.assignmentId));
+      ref.invalidate(trackerProvider(widget.assignmentId));
+      ref.invalidate(assignmentsProvider(classId));
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Assignment published successfully!')));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to publish: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _publishing = false);
+    }
+  }
 
   @override
   void initState() {
@@ -177,6 +202,32 @@ class _AssignmentTrackerScreenState
                           ),
                         ],
                       ),
+                      if (a.status == 'DRAFT') ...[
+                        const Divider(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A56DB),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            icon: _publishing
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2))
+                                : const Icon(Icons.publish_outlined, size: 18),
+                            label: Text(_publishing ? 'Publishing...' : 'Publish Assignment Now',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                            onPressed: _publishing ? null : () => _publishAssignment(a.classId),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -185,31 +236,60 @@ class _AssignmentTrackerScreenState
 
             const SizedBox(height: 16),
 
-            // tracker list
-            tracker.when(
-              loading: () => const LoadingWidget(message: 'Loading tracker...'),
-              error: (e, _) => AppErrorWidget(
-                  message: e.toString(),
-                  onRetry: () =>
-                      ref.invalidate(trackerProvider(widget.assignmentId))),
-              data: (data) {
-                if (data.students.isEmpty)
-                  return const Text('No students tracking this assignment.',
-                      style: TextStyle(color: Color(0xFF9CA3AF)));
-                return Column(
-                  children: data.students
-                      .map((s) => TrackerCard(
-                            studentName: s.fullName,
-                            registrationId: s.registrationId,
-                            trackerStatus: s.trackerStatus,
-                            submittedAt: s.submittedAt != null
-                                ? s.submittedAt!
-                                    .toLocal()
-                                    .toString()
-                                    .substring(0, 16)
-                                : null,
-                          ))
-                      .toList(),
+            // tracker list or draft placeholder
+            assignment.when(
+              loading: () => const SizedBox.shrink(),
+              error: (e, _) => const SizedBox.shrink(),
+              data: (a) {
+                if (a.status == 'DRAFT') {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.hourglass_empty_rounded,
+                              size: 48, color: Color(0xFF9CA3AF)),
+                          SizedBox(height: 12),
+                          Text(
+                            'Assignment is in draft status.\nPublish it to start tracking student submissions.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 14,
+                                height: 1.4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return tracker.when(
+                  loading: () => const LoadingWidget(message: 'Loading tracker...'),
+                  error: (e, _) => AppErrorWidget(
+                      message: e.toString(),
+                      onRetry: () =>
+                          ref.invalidate(trackerProvider(widget.assignmentId))),
+                  data: (data) {
+                    if (data.students.isEmpty)
+                      return const Text('No students tracking this assignment.',
+                          style: TextStyle(color: Color(0xFF9CA3AF)));
+                    return Column(
+                      children: data.students
+                          .map((s) => TrackerCard(
+                                studentName: s.fullName,
+                                registrationId: s.registrationId,
+                                trackerStatus: s.trackerStatus,
+                                submittedAt: s.submittedAt != null
+                                    ? s.submittedAt!
+                                        .toLocal()
+                                        .toString()
+                                        .substring(0, 16)
+                                    : null,
+                              ))
+                          .toList(),
+                    );
+                  },
                 );
               },
             ),

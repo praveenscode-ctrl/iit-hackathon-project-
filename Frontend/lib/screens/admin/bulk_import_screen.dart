@@ -5,6 +5,9 @@ import '../../core/exceptions.dart';
 import 'package:dio/dio.dart';
 import 'dart:io' as io;
 
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 class BulkImportScreen extends StatefulWidget {
   const BulkImportScreen({super.key});
 
@@ -23,12 +26,20 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     try {
       final data = await apiGet('/provision/bulk-import/template');
       final url = data['download_url'] as String?;
-      if (url != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Template URL: $url'),
-              action: SnackBarAction(label: 'Open', onPressed: () {})),
-        );
+      if (url != null) {
+        final uri = Uri.parse(url);
+        try {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          await Clipboard.setData(ClipboardData(text: url));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not launch browser. Link copied to clipboard!'),
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted)

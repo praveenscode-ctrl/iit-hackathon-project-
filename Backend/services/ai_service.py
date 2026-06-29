@@ -69,49 +69,31 @@ def get_temporal_date_range(temporal_ref: str):
         return start, start + timedelta(days=7)
     return None, None
 
-async def process_ai_query(class_id: Optional[str], query_text: str, user_id: str, db: Session) -> dict:
-    system_prompt = """You are an intent extractor for an educational admin tool.
-Extract intent and params from the user query. Return ONLY a valid JSON object.
-Format: {"intent": "string", "params": {"student_name": "string", "assignment_ref": "string", "temporal_ref": "string", "sort_order": "string"}}
-Valid intents: 
-- who_missed_assignment
-- who_submitted_assignment
-- student_completion_rate
-- class_summary
-- risk_students
-- student_profile
-- general_count
-- class_roster
-- pending_approvals
-- all_my_classes
-- mentor_list
-- assignment_list
-- assignment_status
-- assignment_analytics
-- bottleneck_assignments
-- late_submitters
-- submission_history
-- streak_leaders
-- admin_overview
-- class_health
-- unknown
+def get_assignment_context(class_id: Optional[str], class_ids: list, db: Session) -> list:
+    """Fetch only assignment titles and IDs — lightweight, never hits token limit."""
+    if class_id:
+        rows = db.query(Assignment.id, Assignment.title, Assignment.class_id).filter(
+            Assignment.class_id == class_id
+        ).order_by(Assignment.created_at.desc()).limit(15).all()
+    else:
+        rows = db.query(Assignment.id, Assignment.title, Assignment.class_id).filter(
+            Assignment.class_id.in_(class_ids)
+        ).order_by(Assignment.created_at.desc()).limit(15).all()
+    return [{"id": str(r.id), "title": r.title, "class_id": str(r.class_id)} for r in rows]
 
-Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'this week', 'last week'.
-"""
-    
-    llm_response = await call_llm_api(system_prompt, query_text)
-    
-    try:
-        parsed = json.loads(llm_response)
-    except json.JSONDecodeError:
-        parsed = {"intent": "unknown", "params": {}}
-        
-    intent = parsed.get("intent", "unknown")
-    params = parsed.get("params", {})
-    
-    result = {}
-    action_links = []
-    
+def get_student_context(class_id: str, db: Session) -> list:
+    """Fetch student names only when a specific class is known. Never called for all classes."""
+    rows = db.query(User.id, User.full_name).join(ClassMembership).filter(
+        ClassMembership.class_id == class_id,
+        ClassMembership.member_role == 'STUDENT',
+        ClassMembership.status == 'ACTIVE'
+    ).all()
+    return [{"id": str(r.id), "name": r.full_name} for r in rows]
+
+def get_assignment_by_id(assignment_id: str, db: Session) -> Optional[Assignment]:
+    return db.query(Assignment).filter_by(id=assignment_id).first()
+
+async def process_ai_query(class_id: Optional[str], query_text: str, user_id: str, db: Session) -> dict:
     caller = db.query(User).filter_by(id=user_id).first()
     
     if caller.role == "ADMIN":
@@ -121,6 +103,71 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
         
     class_ids = [str(c.id) for c in classes]
     class_names = {str(c.id): c.class_name for c in classes}
+
+    assignment_context = get_assignment_context(class_id, class_ids, db)
+
+    # Build class name list for the prompt
+    class_list_for_prompt = [{"id": cid, "name": class_names[cid]} for cid in class_ids]
+
+    system_prompt = f"""You are an intent extractor for an educational admin tool.
+The user may be an admin managing multiple classes, or a mentor managing their own class.
+
+AVAILABLE CLASSES:
+{json.dumps(class_list_for_prompt)}
+
+RECENT ASSIGNMENTS (across all accessible classes):
+{json.dumps(assignment_context)}
+
+Return ONLY a valid JSON object in one of these two formats:
+
+Format A — when query is clear:
+{{"intent": "string", "params": {{"assignment_id": "uuid or null", "assignment_ref": "string or null", "student_id": "uuid or null", "student_name": "string or null", "class_id": "uuid or null", "temporal_ref": "string or null"}}, "needs_clarification": false}}
+
+Format B — when query is ambiguous about which class:
+{{"intent": "string", "params": {{}}, "needs_clarification": true, "clarification_question": "string", "clarification_options": ["option1", "option2", ...]}}
+
+Rules:
+- If the user asks about "latest assignment" or "recent assignment" without specifying which class, and there are multiple classes, set needs_clarification=true and ask which class they mean. List the class names as clarification_options plus "All classes" as the last option.
+- If the user asks about "all classes" explicitly or says "across all classes", set class_id param to null and needs_clarification=false — process all classes.
+- Match assignment references to the closest title in AVAILABLE ASSIGNMENTS and return its id as assignment_id and its class_id as class_id.
+- If only one class exists, never ask for clarification — always use that class.
+- clarification_question should be one short sentence. Example: "Which class do you want to check?"
+- clarification_options should be the actual class names from AVAILABLE CLASSES, plus "All classes" as the final option.
+
+Valid intents: who_missed_assignment, who_submitted_assignment, student_completion_rate, class_summary, risk_students, student_profile, general_count, class_roster, pending_approvals, all_my_classes, mentor_list, assignment_list, assignment_status, assignment_analytics, bottleneck_assignments, late_submitters, submission_history, streak_leaders, admin_overview, class_health, unknown
+"""
+    
+    llm_response = await call_llm_api(system_prompt, query_text)
+    
+    try:
+        parsed = json.loads(llm_response)
+    except json.JSONDecodeError:
+        parsed = {"intent": "unknown", "params": {}, "needs_clarification": False}
+        
+    # Handle ambiguity FIRST — before any DB query
+    if parsed.get("needs_clarification", False):
+        clarification_response = {
+            "intent": parsed.get("intent", "unknown"),
+            "query_text": query_text,
+            "result": {
+                "type": "clarification",
+                "data": parsed.get("clarification_options", []),
+                "message": parsed.get("clarification_question", "Which class do you mean?")
+            },
+            "action_links": [],
+            "needs_clarification": True
+        }
+        _log_query(db, user_id, class_id, query_text, "clarification", clarification_response)
+        return clarification_response
+        
+    intent = parsed.get("intent", "unknown")
+    params = parsed.get("params", {})
+    # If LLM resolved the class_id from context, use it
+    if params.get("class_id") and not class_id:
+        class_id = params.get("class_id")
+        
+    result = {}
+    action_links = []
     
     class_scoped_intents = {"who_submitted_assignment", "who_missed_assignment", "student_completion_rate", "student_profile", "class_summary", "risk_students", "class_roster", "pending_approvals", "mentor_list", "assignment_list", "assignment_status", "assignment_analytics", "bottleneck_assignments", "late_submitters", "submission_history", "streak_leaders"}
     if intent in class_scoped_intents and not class_id and not class_ids:
@@ -190,12 +237,16 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
         return query.order_by(Assignment.created_at.desc()).first()
 
     if intent == "who_missed_assignment":
-        assignment_ref = params.get("assignment_ref")
-        temporal_ref = params.get("temporal_ref")
-        assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+        assignment_id = params.get("assignment_id")
+        assignment = get_assignment_by_id(assignment_id, db) if assignment_id else None
+
         if not assignment:
-            result = no_data_response(f"Could not find an assignment matching your query.")
-        else:
+            assignment_ref = params.get("assignment_ref")
+            temporal_ref = params.get("temporal_ref")
+            assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+
+        if assignment:
+            # Single assignment — existing logic, works correctly
             non_submitters = db.execute(text("""
                 SELECT u.id, u.full_name, u.registration_id
                 FROM users u
@@ -208,7 +259,7 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
                     AND s.is_current = true
                 WHERE s.id IS NULL
             """), {"class_id": str(assignment.class_id), "assignment_id": str(assignment.id)}).fetchall()
-            
+
             result = {
                 "type": "student_list",
                 "data": [{"student_id": str(r.id), "full_name": r.full_name, "registration_id": r.registration_id} for r in non_submitters],
@@ -216,10 +267,56 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
             }
             action_links = [{"label": f"View {r.full_name}", "route": f"/analytics/students/{r.id}"} for r in non_submitters[:3]]
 
+        else:
+            # No specific assignment resolved — show latest assignment per class, grouped
+            grouped_lines = []
+            total_missing = 0
+            all_data = []
+
+            target_class_ids = [class_id] if class_id else class_ids
+
+            for cid in target_class_ids:
+                latest = db.query(Assignment).filter(
+                    Assignment.class_id == cid,
+                    Assignment.status.in_(["PUBLISHED", "CLOSED"])
+                ).order_by(Assignment.created_at.desc()).first()
+
+                if not latest:
+                    continue
+
+                non_submitters = db.execute(text("""
+                    SELECT u.id, u.full_name, u.registration_id
+                    FROM users u
+                    JOIN class_memberships cm ON cm.user_id = u.id
+                        AND cm.class_id = :class_id
+                        AND cm.member_role = 'STUDENT'
+                        AND cm.status = 'ACTIVE'
+                    LEFT JOIN submissions s ON s.student_id = u.id
+                        AND s.assignment_id = :assignment_id
+                        AND s.is_current = true
+                    WHERE s.id IS NULL
+                """), {"class_id": cid, "assignment_id": str(latest.id)}).fetchall()
+
+                c_name = class_names.get(cid, cid)
+                total_missing += len(non_submitters)
+                names = ", ".join(r.full_name for r in non_submitters) if non_submitters else "None"
+                grouped_lines.append(f"**{c_name}** — '{latest.title}': {len(non_submitters)} not submitted ({names})")
+                all_data.extend([{"student_id": str(r.id), "full_name": r.full_name, "class": c_name} for r in non_submitters])
+
+            result = {
+                "type": "student_list",
+                "data": all_data,
+                "message": f"Total {total_missing} student(s) haven't submitted their latest assignment:\n\n" + "\n".join(grouped_lines)
+            }
+
     elif intent == "who_submitted_assignment":
-        assignment_ref = params.get("assignment_ref")
-        temporal_ref = params.get("temporal_ref")
-        assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+        assignment_id = params.get("assignment_id")
+        assignment = get_assignment_by_id(assignment_id, db) if assignment_id else None
+        if not assignment:
+            assignment_ref = params.get("assignment_ref")
+            temporal_ref = params.get("temporal_ref")
+            assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+            
         if not assignment:
             result = no_data_response(f"Could not find an assignment matching your query.")
         else:
@@ -245,9 +342,13 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
             action_links = [{"label": f"View {r.full_name}", "route": f"/analytics/students/{r.id}"} for r in submitters[:3]]
 
     elif intent == "late_submitters":
-        assignment_ref = params.get("assignment_ref")
-        temporal_ref = params.get("temporal_ref")
-        assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+        assignment_id = params.get("assignment_id")
+        assignment = get_assignment_by_id(assignment_id, db) if assignment_id else None
+        if not assignment:
+            assignment_ref = params.get("assignment_ref")
+            temporal_ref = params.get("temporal_ref")
+            assignment = get_assignment_by_ref(assignment_ref, temporal_ref)
+            
         if not assignment:
             result = no_data_response(f"Could not find matching assignment.")
         else:
@@ -516,9 +617,12 @@ Temporal refs can be exactly: 'today', 'yesterday', 'day before yesterday', 'thi
             }
 
     elif intent == "assignment_status":
-        assignment_ref = params.get("assignment_ref")
-        temporal_ref = params.get("temporal_ref")
-        a = get_assignment_by_ref(assignment_ref, temporal_ref)
+        assignment_id = params.get("assignment_id")
+        a = get_assignment_by_id(assignment_id, db) if assignment_id else None
+        if not a:
+            assignment_ref = params.get("assignment_ref")
+            temporal_ref = params.get("temporal_ref")
+            a = get_assignment_by_ref(assignment_ref, temporal_ref)
         if a:
             result = {
                 "type": "info",
