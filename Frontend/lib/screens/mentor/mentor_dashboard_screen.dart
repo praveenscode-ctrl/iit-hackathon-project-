@@ -8,6 +8,7 @@ import '../../providers/analytics_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/notification_tile_widget.dart';
 import '../../services/submission_service.dart';
+import '../../models/notification_model.dart';
 
 class MentorDashboardScreen extends ConsumerStatefulWidget {
   const MentorDashboardScreen({super.key});
